@@ -47,7 +47,7 @@ export interface UseQuotesResult {
 // ── PoW solver (mirrors Tangle pricing-engine/src/pow.rs) ──
 
 const POW_DIFFICULTY = 20;
-const PRICING_SCALE = 1_000_000_000; // 10^9
+const WEI_PER_TNT = 1_000_000_000_000_000_000; // 10^18
 
 function sha256(data: Uint8Array): Uint8Array {
   return viemSha256(data, 'bytes');
@@ -125,9 +125,13 @@ function resolveOperatorRpc(raw: string): string {
 }
 
 export function formatCost(totalCost: bigint): string {
-  const scaled = Number(totalCost) / PRICING_SCALE;
-  if (scaled < 0.01) return `${(scaled * 1000).toFixed(2)} mTNT`;
-  return `${scaled.toFixed(4)} TNT`;
+  // totalCost is in wei (1e18 wei = 1 TNT)
+  const tnt = Number(totalCost) / WEI_PER_TNT;
+  if (tnt === 0) return '0 TNT';
+  if (tnt < 0.001) return `${(tnt * 1_000_000).toFixed(2)} \u03bcTNT`;
+  if (tnt < 0.01) return `${(tnt * 1000).toFixed(2)} mTNT`;
+  if (tnt < 1000) return `${tnt.toFixed(4)} TNT`;
+  return `${tnt.toLocaleString(undefined, { maximumFractionDigits: 2 })} TNT`;
 }
 
 // ── Hook ──

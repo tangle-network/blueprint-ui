@@ -18,7 +18,7 @@ export type JobCategory = 'lifecycle' | 'execution' | 'batch' | 'workflow' | 'ss
 export interface JobFieldDef {
   name: string;
   label: string;
-  type: 'text' | 'textarea' | 'number' | 'boolean' | 'select' | 'json';
+  type: 'text' | 'textarea' | 'number' | 'boolean' | 'select' | 'json' | 'combobox';
   placeholder?: string;
   required?: boolean;
   defaultValue?: string | number | boolean;
@@ -28,6 +28,8 @@ export interface JobFieldDef {
   min?: number;
   /** Maximum allowed value for number fields */
   max?: number;
+  /** Step increment for number fields */
+  step?: number;
   /** Solidity ABI type for encoding (e.g. 'string', 'uint64', 'bool', 'uint8') */
   abiType?: string;
   /** ABI param name if different from `name` (e.g. 'agent_identifier' vs 'agentIdentifier') */

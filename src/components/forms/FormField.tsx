@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import type { JobFieldDef } from '../../blueprints/registry';
 import { Input } from '../ui/input';
 import { Select } from '../ui/select';
@@ -62,6 +63,7 @@ function FieldInput({
           value={value as number}
           min={field.min}
           max={field.max}
+          step={field.step}
           onChange={(e) => {
             const raw = Number(e.target.value);
             const clamped =
@@ -94,7 +96,65 @@ function FieldInput({
           options={field.options ?? []}
         />
       );
+    case 'combobox':
+      return <ComboboxInput field={field} value={value} onChange={onChange} />;
     default:
       return null;
   }
+}
+
+/** Dropdown with preset options + free-text custom input */
+function ComboboxInput({
+  field,
+  value,
+  onChange,
+}: {
+  field: JobFieldDef;
+  value: unknown;
+  onChange: (name: string, value: unknown) => void;
+}) {
+  const strVal = String(value ?? '');
+  const options = field.options ?? [];
+  const isPreset = options.some((o) => o.value === strVal);
+  const [isCustom, setIsCustom] = useState(!isPreset && strVal !== '');
+
+  if (isCustom) {
+    return (
+      <div className="flex gap-2">
+        <Input
+          value={strVal}
+          onChange={(e) => onChange(field.name, e.target.value)}
+          placeholder={field.placeholder}
+          className="flex-1"
+        />
+        <button
+          type="button"
+          onClick={() => {
+            setIsCustom(false);
+            onChange(field.name, options[0]?.value ?? '');
+          }}
+          className="text-xs text-bp-elements-textTertiary hover:text-bp-elements-textSecondary px-2"
+        >
+          Presets
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex gap-2">
+      <Select
+        value={strVal}
+        onChange={(e) => {
+          if (e.target.value === '__custom__') {
+            setIsCustom(true);
+            onChange(field.name, '');
+          } else {
+            onChange(field.name, e.target.value);
+          }
+        }}
+        options={[...options, { label: 'Custom...', value: '__custom__' }]}
+      />
+    </div>
+  );
 }
