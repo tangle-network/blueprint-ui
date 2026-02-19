@@ -1,0 +1,78 @@
+/**
+ * @tangle/blueprint-ui — shared utilities, stores, contracts, hooks, and types
+ * for Tangle blueprint UIs.
+ */
+
+// ── Utils ──
+export { cn } from './utils';
+export { bpThemeTokens } from './preset';
+
+// ── Stores ──
+export { serializeWithBigInt, deserializeWithBigInt, persistedAtom } from './stores/persistedAtom';
+export type { SessionEntry } from './stores/session';
+export { sessionMapStore, getSession, setSession, removeSession, gcSessions } from './stores/session';
+export type { TrackedTx } from './stores/txHistory';
+export { txListStore, pendingCount, addTx, updateTx, clearTxs } from './stores/txHistory';
+export type { OperatorInfo, InfraConfig } from './stores/infra';
+export { infraStore, updateInfra, getInfra } from './stores/infra';
+export type { Theme } from './stores/theme';
+export { kTheme, DEFAULT_THEME, themeStore, themeIsDark, toggleTheme } from './stores/theme';
+
+// ── Contracts ──
+export { tangleJobsAbi, tangleServicesAbi, tangleOperatorsAbi } from './contracts/abi';
+export type { CoreAddresses, NetworkConfig } from './contracts/chains';
+export {
+  resolveRpcUrl,
+  rpcUrl,
+  tangleLocal,
+  tangleTestnet,
+  tangleMainnet,
+  allTangleChains,
+  mainnet,
+  configureNetworks,
+  getNetworks,
+} from './contracts/chains';
+export {
+  selectedChainIdStore,
+  publicClientStore,
+  getPublicClient,
+  publicClient,
+  getAddresses,
+} from './contracts/publicClient';
+export { encodeJobArgs } from './contracts/generic-encoder';
+
+// ── Blueprints ──
+export type {
+  JobCategory,
+  JobFieldDef,
+  AbiContextParam,
+  JobDefinition,
+  BlueprintDefinition,
+} from './blueprints/registry';
+export {
+  registerBlueprint,
+  getBlueprint,
+  getAllBlueprints,
+  getBlueprintJobs,
+  getJobById,
+} from './blueprints/registry';
+
+// ── Hooks ──
+export type { DiscoveredOperator } from './hooks/useOperators';
+export { useOperators } from './hooks/useOperators';
+export type { JobFormState } from './hooks/useJobForm';
+export { useJobForm } from './hooks/useJobForm';
+export type { JobQuote, UseJobPriceResult, JobPriceEntry, UseJobPricesResult } from './hooks/useJobPrice';
+export { useJobPrice, useJobPrices } from './hooks/useJobPrice';
+export type { ServiceInfo } from './hooks/useServiceValidation';
+export { useServiceValidation } from './hooks/useServiceValidation';
+export { useWagmiSidecarAuth } from './hooks/useWagmiSidecarAuth';
+export { useAuthenticatedFetch } from './hooks/useAuthenticatedFetch';
+export type { OperatorQuote, UseQuotesResult } from './hooks/useQuotes';
+export { solvePoW, formatCost, useQuotes } from './hooks/useQuotes';
+export type { SubmitJobOpts, JobSubmitStatus } from './hooks/useSubmitJob';
+export { useSubmitJob } from './hooks/useSubmitJob';
+export { useSessionAuth } from './hooks/useSessionAuth';
+export type { ProvisionPhase, ProvisionStatus } from './hooks/useProvisionProgress';
+export { getPhaseLabel, isTerminalPhase, useProvisionProgress } from './hooks/useProvisionProgress';
+export { useThemeValue } from './hooks/useThemeValue';
