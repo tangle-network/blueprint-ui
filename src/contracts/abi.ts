@@ -44,7 +44,7 @@ export const tangleJobsAbi = [
     inputs: [
       { name: 'serviceId', type: 'uint64', indexed: true },
       { name: 'callId', type: 'uint64', indexed: true },
-      { name: 'jobIndex', type: 'uint8', indexed: true },
+      { name: 'jobIndex', type: 'uint8', indexed: false },
       { name: 'caller', type: 'address', indexed: false },
       { name: 'inputs', type: 'bytes', indexed: false },
     ],
