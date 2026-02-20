@@ -50,7 +50,7 @@ export function gcSessions() {
   const cleaned: Record<string, SessionEntry> = {};
   let changed = false;
 
-  for (const [key, entry] of Object.entries(map)) {
+  for (const [key, entry] of Object.entries(map) as [string, SessionEntry][]) {
     if (entry.expiresAt > now) {
       cleaned[key] = entry;
     } else {

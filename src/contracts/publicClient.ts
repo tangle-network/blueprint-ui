@@ -32,7 +32,7 @@ function getOrCreateClient(chainId: number): PublicClient {
 
 export const publicClientStore = atom<PublicClient>(getOrCreateClient(selectedChainIdStore.get()));
 
-selectedChainIdStore.subscribe((chainId) => {
+selectedChainIdStore.subscribe((chainId: number) => {
   publicClientStore.set(getOrCreateClient(chainId));
 });
 

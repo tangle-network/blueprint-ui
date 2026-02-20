@@ -54,7 +54,7 @@ export function persistedAtom<T>(opts: PersistedAtomOpts<T>): WritableAtom<T> {
   const store = atom<T>(restored);
 
   if (typeof window !== 'undefined') {
-    store.subscribe((value) => {
+    store.subscribe((value: T) => {
       try {
         localStorage.setItem(key, serialize(value));
       } catch {

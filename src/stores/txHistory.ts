@@ -20,8 +20,8 @@ export const txListStore = persistedAtom<TrackedTx[]>({
   deserialize: deserializeWithBigInt,
 });
 
-export const pendingCount = computed(txListStore, (txs) =>
-  txs.filter((tx) => tx.status === 'pending').length,
+export const pendingCount = computed(txListStore, (txs: TrackedTx[]) =>
+  txs.filter((tx: TrackedTx) => tx.status === 'pending').length,
 );
 
 export function addTx(hash: `0x${string}`, label: string, chainId: number) {
@@ -36,7 +36,7 @@ export function updateTx(
   update: Partial<Pick<TrackedTx, 'status' | 'blockNumber' | 'gasUsed'>>,
 ) {
   txListStore.set(
-    txListStore.get().map((tx) =>
+    txListStore.get().map((tx: TrackedTx) =>
       tx.hash === hash ? { ...tx, ...update } : tx,
     ),
   );

@@ -60,7 +60,7 @@ function FieldInput({
       return (
         <Input
           type="number"
-          value={value ?? ''}
+          value={(value as string | number | undefined) ?? ''}
           min={field.min}
           max={field.max}
           step={field.step}
