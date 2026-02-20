@@ -60,11 +60,15 @@ function FieldInput({
       return (
         <Input
           type="number"
-          value={value as number}
+          value={value ?? ''}
           min={field.min}
           max={field.max}
           step={field.step}
           onChange={(e) => {
+            if (e.target.value === '') {
+              onChange(field.name, field.min ?? 0);
+              return;
+            }
             const raw = Number(e.target.value);
             const clamped =
               field.min != null && raw < field.min ? field.min :

@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useEffect, useMemo } from 'react';
 import type { JobDefinition } from '../blueprints/registry';
 
 export interface JobFormState {
@@ -18,7 +18,7 @@ function buildDefaults(job: JobDefinition): Record<string, unknown> {
     } else if (f.type === 'boolean') {
       init[f.name] = false;
     } else if (f.type === 'number') {
-      init[f.name] = 0;
+      init[f.name] = f.min ?? 0;
     } else {
       init[f.name] = '';
     }
@@ -30,6 +30,12 @@ export function useJobForm(job: JobDefinition | null): JobFormState {
   const defaults = useMemo(() => (job ? buildDefaults(job) : {}), [job]);
   const [values, setValues] = useState<Record<string, unknown>>(defaults);
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  // Sync form values when job changes (e.g. blueprint selection or async load)
+  useEffect(() => {
+    setValues(defaults);
+    setErrors({});
+  }, [defaults]);
 
   const onChange = useCallback((name: string, value: unknown) => {
     setValues((prev) => ({ ...prev, [name]: value }));

@@ -152,8 +152,9 @@ export function useQuotes(
 
   useEffect(() => {
     if (!enabled || operators.length === 0) {
-      setQuotes([]);
-      setErrors(new Map());
+      // Only set state if it's actually non-empty to avoid triggering re-renders
+      setQuotes((prev) => (prev.length === 0 ? prev : []));
+      setErrors((prev) => (prev.size === 0 ? prev : new Map()));
       return;
     }
 
