@@ -66,7 +66,6 @@ export type { JobQuote, UseJobPriceResult, JobPriceEntry, UseJobPricesResult } f
 export { useJobPrice, useJobPrices } from './hooks/useJobPrice';
 export type { ServiceInfo } from './hooks/useServiceValidation';
 export { useServiceValidation } from './hooks/useServiceValidation';
-export { useWagmiSidecarAuth } from './hooks/useWagmiSidecarAuth';
 export { useAuthenticatedFetch } from './hooks/useAuthenticatedFetch';
 export type { OperatorQuote, UseQuotesResult } from './hooks/useQuotes';
 export { solvePoW, formatCost, useQuotes } from './hooks/useQuotes';

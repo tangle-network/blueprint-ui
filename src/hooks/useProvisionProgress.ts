@@ -21,6 +21,7 @@ export interface ProvisionStatus {
   started_at: number;
   updated_at: number;
   progress_pct: number;
+  sidecar_url: string | null;
 }
 
 const PHASE_LABELS: Record<ProvisionPhase, string> = {
@@ -116,6 +117,7 @@ export function useProvisionProgress({
     phase: status?.phase ?? null,
     progressPct: status?.progress_pct ?? 0,
     sandboxId: status?.sandbox_id ?? null,
+    sidecarUrl: status?.sidecar_url ?? null,
     message: status?.message ?? null,
     isReady: status?.phase === 'ready',
     isFailed: status?.phase === 'failed',

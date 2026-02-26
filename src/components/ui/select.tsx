@@ -1,4 +1,5 @@
 import * as React from 'react';
+import * as SelectPrimitive from '@radix-ui/react-select';
 import { cn } from '../../utils';
 
 export interface SelectOption {
@@ -6,34 +7,73 @@ export interface SelectOption {
   value: string;
 }
 
-interface SelectProps extends Omit<React.ComponentProps<'select'>, 'children'> {
+interface SelectProps {
+  value?: string;
+  onValueChange?: (value: string) => void;
   options: SelectOption[];
   placeholder?: string;
+  className?: string;
+  disabled?: boolean;
 }
 
-function Select({ className, options, placeholder, ...props }: SelectProps) {
+function Select({ value, onValueChange, options, placeholder, className, disabled }: SelectProps) {
   return (
-    <select
-      className={cn(
-        'flex h-9 w-full rounded-lg border border-bp-elements-borderColor bg-bp-elements-background-depth-2 px-3 py-1.5 text-sm text-bp-elements-textPrimary transition-colors',
-        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-400/50 focus-visible:ring-offset-2 focus-visible:ring-offset-bp-elements-background-depth-1',
-        'disabled:cursor-not-allowed disabled:opacity-50',
-        'appearance-none bg-[url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%20width%3D%2712%27%20height%3D%2712%27%20viewBox%3D%270%200%2012%2012%27%3E%3Cpath%20d%3D%27M3%204.5L6%207.5L9%204.5%27%20fill%3D%27none%27%20stroke%3D%27%238A8A9E%27%20stroke-width%3D%271.5%27%20stroke-linecap%3D%27round%27%20stroke-linejoin%3D%27round%27/%3E%3C/svg%3E")] bg-[length:12px] bg-[right_8px_center] bg-no-repeat pr-8',
-        className,
-      )}
-      {...props}
-    >
-      {placeholder && (
-        <option value="" disabled>
-          {placeholder}
-        </option>
-      )}
-      {options.map((opt) => (
-        <option key={opt.value} value={opt.value}>
-          {opt.label}
-        </option>
-      ))}
-    </select>
+    <SelectPrimitive.Root value={value} onValueChange={onValueChange} disabled={disabled}>
+      <SelectPrimitive.Trigger
+        className={cn(
+          'group flex h-11 w-full items-center justify-between rounded-lg px-3.5 py-2.5 text-base font-body',
+          'bg-bp-elements-background-depth-3 dark:bg-bp-elements-background-depth-4 border border-bp-elements-borderColor text-bp-elements-textPrimary',
+          'transition-all duration-200 outline-none',
+          'hover:border-bp-elements-borderColorActive/40',
+          'focus-visible:border-violet-500/40 focus-visible:ring-2 focus-visible:ring-violet-500/10',
+          'disabled:pointer-events-none disabled:opacity-40',
+          'data-[placeholder]:text-bp-elements-textTertiary',
+          className,
+        )}
+      >
+        <SelectPrimitive.Value placeholder={placeholder ?? 'Select...'} />
+        <SelectPrimitive.Icon className="ml-2 shrink-0 text-bp-elements-textTertiary transition-transform duration-200 group-data-[state=open]:rotate-180">
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+            <path d="M3 4.5L6 7.5L9 4.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </SelectPrimitive.Icon>
+      </SelectPrimitive.Trigger>
+
+      <SelectPrimitive.Portal>
+        <SelectPrimitive.Content
+          position="popper"
+          sideOffset={4}
+          className={cn(
+            'relative z-50 max-h-[min(var(--radix-select-content-available-height),280px)] min-w-[var(--radix-select-trigger-width)] overflow-hidden',
+            'rounded-xl border border-white/[0.06] bg-neutral-900/95 backdrop-blur-xl shadow-2xl shadow-black/40',
+            'data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-[0.98] data-[state=open]:slide-in-from-top-1',
+            'data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-[0.98] data-[state=closed]:slide-out-to-top-1',
+          )}
+        >
+          <SelectPrimitive.Viewport className="p-1.5">
+            {options.map((opt) => (
+              <SelectPrimitive.Item
+                key={opt.value}
+                value={opt.value}
+                className={cn(
+                  'relative flex w-full cursor-pointer items-center rounded-lg px-3 py-2.5 text-sm font-body outline-none select-none',
+                  'text-neutral-300 transition-colors duration-100',
+                  'data-[highlighted]:bg-white/[0.06] data-[highlighted]:text-white',
+                  'data-[state=checked]:text-violet-300',
+                )}
+              >
+                <SelectPrimitive.ItemText>{opt.label}</SelectPrimitive.ItemText>
+                <SelectPrimitive.ItemIndicator className="ml-auto pl-3">
+                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                    <path d="M3 7.5L5.5 10L11 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                </SelectPrimitive.ItemIndicator>
+              </SelectPrimitive.Item>
+            ))}
+          </SelectPrimitive.Viewport>
+        </SelectPrimitive.Content>
+      </SelectPrimitive.Portal>
+    </SelectPrimitive.Root>
   );
 }
 

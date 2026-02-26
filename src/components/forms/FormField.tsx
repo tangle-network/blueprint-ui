@@ -57,28 +57,7 @@ function FieldInput({
         />
       );
     case 'number':
-      return (
-        <Input
-          type="number"
-          value={(value as string | number | undefined) ?? ''}
-          min={field.min}
-          max={field.max}
-          step={field.step}
-          onChange={(e) => {
-            if (e.target.value === '') {
-              onChange(field.name, field.min ?? 0);
-              return;
-            }
-            const raw = Number(e.target.value);
-            const clamped =
-              field.min != null && raw < field.min ? field.min :
-              field.max != null && raw > field.max ? field.max :
-              raw;
-            onChange(field.name, clamped);
-          }}
-          placeholder={field.placeholder}
-        />
-      );
+      return <NumberInput field={field} value={value} onChange={onChange} />;
     case 'textarea':
     case 'json':
       return (
@@ -96,7 +75,7 @@ function FieldInput({
       return (
         <Select
           value={String(value ?? '')}
-          onChange={(e) => onChange(field.name, e.target.value)}
+          onValueChange={(v) => onChange(field.name, v)}
           options={field.options ?? []}
         />
       );
@@ -105,6 +84,68 @@ function FieldInput({
     default:
       return null;
   }
+}
+
+/** Number input with inline stepper buttons */
+function NumberInput({
+  field,
+  value,
+  onChange,
+}: {
+  field: JobFieldDef;
+  value: unknown;
+  onChange: (name: string, value: unknown) => void;
+}) {
+  const numVal = Number(value ?? field.min ?? 0);
+  const step = field.step ?? 1;
+
+  const clamp = (raw: number) => {
+    if (field.min != null && raw < field.min) return field.min;
+    if (field.max != null && raw > field.max) return field.max;
+    return raw;
+  };
+
+  const canDecrement = field.min == null || numVal > field.min;
+  const canIncrement = field.max == null || numVal < field.max;
+
+  return (
+    <div className="flex items-stretch h-11 rounded-lg border border-bp-elements-borderColor bg-bp-elements-background-depth-3 dark:bg-bp-elements-background-depth-4 transition-all duration-200 hover:border-bp-elements-borderColorActive/40 focus-within:border-violet-500/40 focus-within:ring-2 focus-within:ring-violet-500/10">
+      <button
+        type="button"
+        tabIndex={-1}
+        disabled={!canDecrement}
+        onClick={() => onChange(field.name, clamp(numVal - step))}
+        className="flex items-center justify-center w-10 shrink-0 text-bp-elements-textTertiary transition-colors hover:text-bp-elements-textPrimary hover:bg-white/[0.04] rounded-l-lg disabled:opacity-30 disabled:pointer-events-none"
+      >
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7h8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" /></svg>
+      </button>
+      <input
+        type="number"
+        value={numVal}
+        min={field.min}
+        max={field.max}
+        step={step}
+        onChange={(e) => {
+          if (e.target.value === '') {
+            onChange(field.name, field.min ?? 0);
+            return;
+          }
+          onChange(field.name, clamp(Number(e.target.value)));
+        }}
+        placeholder={field.placeholder}
+        className="flex-1 min-w-0 bg-transparent text-center text-base font-data text-bp-elements-textPrimary outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+      />
+      <button
+        type="button"
+        tabIndex={-1}
+        disabled={!canIncrement}
+        onClick={() => onChange(field.name, clamp(numVal + step))}
+        className="flex items-center justify-center w-10 shrink-0 text-bp-elements-textTertiary transition-colors hover:text-bp-elements-textPrimary hover:bg-white/[0.04] rounded-r-lg disabled:opacity-30 disabled:pointer-events-none"
+      >
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 3v8M3 7h8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" /></svg>
+      </button>
+    </div>
+  );
 }
 
 /** Dropdown with preset options + free-text custom input */
@@ -137,7 +178,7 @@ function ComboboxInput({
             setIsCustom(false);
             onChange(field.name, options[0]?.value ?? '');
           }}
-          className="text-xs text-bp-elements-textTertiary hover:text-bp-elements-textSecondary px-2"
+          className="shrink-0 rounded-lg border border-bp-elements-borderColor bg-bp-elements-background-depth-3 px-3 py-2 text-xs font-display text-bp-elements-textTertiary transition-colors hover:border-bp-elements-borderColorActive/40 hover:text-bp-elements-textSecondary"
         >
           Presets
         </button>
@@ -146,18 +187,19 @@ function ComboboxInput({
   }
 
   return (
-    <div className="flex gap-2">
+    <div className="flex gap-2 w-full">
       <Select
         value={strVal}
-        onChange={(e) => {
-          if (e.target.value === '__custom__') {
+        onValueChange={(v) => {
+          if (v === '__custom__') {
             setIsCustom(true);
             onChange(field.name, '');
           } else {
-            onChange(field.name, e.target.value);
+            onChange(field.name, v);
           }
         }}
         options={[...options, { label: 'Custom...', value: '__custom__' }]}
+        className="flex-1"
       />
     </div>
   );

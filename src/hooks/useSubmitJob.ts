@@ -1,5 +1,6 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useState, useMemo } from 'react';
 import { useAccount, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
+import { decodeEventLog } from 'viem';
 import { tangleJobsAbi } from '../contracts/abi';
 import { getAddresses } from '../contracts/publicClient';
 import { addTx, updateTx } from '../stores/txHistory';
@@ -23,9 +24,29 @@ export function useSubmitJob() {
   const [error, setError] = useState<string | null>(null);
   const [txHash, setTxHash] = useState<`0x${string}` | undefined>();
 
-  const { isSuccess, isError } = useWaitForTransactionReceipt({
+  const { data: receipt, isSuccess, isError } = useWaitForTransactionReceipt({
     hash: txHash,
   });
+
+  // Extract callId from the JobCalled event in the receipt logs
+  const callId = useMemo<number | null>(() => {
+    if (!receipt?.logs) return null;
+    for (const log of receipt.logs) {
+      try {
+        const decoded = decodeEventLog({
+          abi: tangleJobsAbi,
+          data: log.data,
+          topics: log.topics,
+        });
+        if (decoded.eventName === 'JobCalled' && 'callId' in decoded.args) {
+          return Number(decoded.args.callId);
+        }
+      } catch {
+        // Not a matching event, skip
+      }
+    }
+    return null;
+  }, [receipt]);
 
   useEffect(() => {
     if (isSuccess && txHash) {
@@ -87,6 +108,7 @@ export function useSubmitJob() {
     status,
     error,
     txHash,
+    callId,
     isSigning,
     isConnected: !!address,
   };
