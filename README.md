@@ -63,6 +63,7 @@ A TypeScript/React package that provides the building blocks for blueprint UIs o
 - **`JobDefinition`** — Declarative job schema with field types, ABI metadata, and categories
 
 ## Installation
+## Installation
 
 ```bash
 # As a git dependency (recommended for Tangle apps)
@@ -88,3 +89,34 @@ React 19, wagmi 3.x, viem 2.x, nanostores, Radix UI primitives, framer-motion, s
 ## License
 
 Licensed under either of [Apache License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0) or [MIT license](http://opensource.org/licenses/MIT), at your option.
+
+---
+
+## Key Concepts
+
+**Blueprint UI** is a TypeScript/React component library for building user interfaces that interact with Tangle Network blueprints. It provides pre-built components for operator management, service requests, job submission, and payment flows.
+
+**Tangle Network** is a decentralized infrastructure protocol where operators stake economic collateral to run verifiable services called blueprints.
+
+**x402** is an HTTP-native micropayment protocol that enables per-request payments for blueprint services, integrated into the UI through payment hooks and components.
+
+**Blueprint** is a deployable service specification on Tangle that defines computation, verification, and payment in a single package.
+
+---
+
+## Frequently Asked Questions
+
+**What is @tangle/blueprint-ui?**
+A React component library providing UI primitives, hooks, and contract utilities for building applications on Tangle Network.
+
+**Do I need to build this package before using it?**
+No. It is designed as a source dependency consumed directly by Vite or similar bundlers with no build step required.
+
+**What framework does blueprint-ui support?**
+React with TypeScript. Components use Radix UI primitives and Tailwind CSS for styling.
+
+**How do I connect to Tangle contracts?**
+Use the provided contract hooks and ABI utilities. The package includes typed bindings for Tangle's on-chain service registry, operator staking, and job submission.
+
+**Can I use blueprint-ui for x402 payment flows?**
+Yes. The hooks and utilities support x402 payment header construction for per-request micropayments to blueprint operators.
