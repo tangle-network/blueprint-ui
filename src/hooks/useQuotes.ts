@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import type { Address } from 'viem';
 import { sha256 as viemSha256, toHex } from 'viem';
 import type { DiscoveredOperator } from './useOperators';
+import { resolveOperatorRpc } from '../utils/resolveOperatorRpc';
 
 /**
  * RFQ (Request for Quote) hook — fetches pricing quotes from operators.
@@ -101,27 +102,6 @@ export async function solvePoW(
     }
   }
   throw new Error('PoW: exhausted nonce space');
-}
-
-/** Rewrite operator RPC hostname for browser reachability */
-function resolveOperatorRpc(raw: string): string {
-  if (typeof window === 'undefined') return raw;
-  const withProto = raw.includes('://') ? raw : `http://${raw}`;
-  try {
-    const url = new URL(withProto);
-    const pageHost = window.location.hostname;
-    const isNonRoutable =
-      url.hostname.endsWith('.local') ||
-      !url.hostname.includes('.') ||
-      url.hostname === '127.0.0.1' ||
-      url.hostname === 'localhost';
-    if (isNonRoutable && pageHost !== url.hostname) {
-      url.hostname = pageHost;
-    }
-    return url.toString().replace(/\/$/, '');
-  } catch {
-    return withProto;
-  }
 }
 
 export function formatCost(totalCost: bigint): string {

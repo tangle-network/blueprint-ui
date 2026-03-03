@@ -36,6 +36,10 @@ export { Identicon } from './components/shared/Identicon';
 export { TangleLogo } from './components/shared/TangleLogo';
 
 // ── Layout ──
+export { AppDocument } from './components/layout/AppDocument';
+export { AppFooter } from './components/layout/AppFooter';
+export { AppToaster } from './components/layout/AppToaster';
+export { Web3Shell } from './components/layout/Web3Shell';
 export { ChainSwitcher } from './components/layout/ChainSwitcher';
 export { ThemeToggle } from './components/layout/ThemeToggle';
 

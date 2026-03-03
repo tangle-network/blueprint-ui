@@ -21,7 +21,7 @@ A TypeScript/React package that provides the building blocks for blueprint UIs o
 
 **Forms** — `FormField`, `BlueprintJobForm` (auto-generated from job definitions), `FormSummary`, `JobExecutionDialog`
 
-**Layout** — `ChainSwitcher`, `ThemeToggle`
+**Layout / App Shell** — `AppDocument`, `AppFooter`, `AppToaster`, `Web3Shell`, `ChainSwitcher`, `ThemeToggle`
 
 **Shared** — `Identicon` (blockie avatars), `TangleLogo`
 
@@ -56,6 +56,18 @@ A TypeScript/React package that provides the building blocks for blueprint UIs o
 - **Chain configs** — Tangle Local, Testnet, Mainnet with RPC resolution
 - **`publicClient`** — Singleton viem public client tied to selected chain
 - **`encodeJobArgs`** — ABI-encode job arguments from form values using job field metadata
+- **Web3 helpers** — `createTangleTransports`, `defaultConnectKitOptions`, `tangleWalletChains`, `resolveOperatorRpc`
+
+## Package Boundaries
+
+Use `@tangle/blueprint-ui` for:
+- App-agnostic shell/layout primitives and design-system building blocks
+- Shared chain/contract/provisioning hooks + stores
+- Reusable cross-blueprint form and submission workflows
+
+Keep in app-local code:
+- Product-specific routes and copy
+- Feature composition that is unique to a single app
 
 ### Blueprint Registry
 
