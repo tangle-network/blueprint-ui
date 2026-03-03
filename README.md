@@ -84,19 +84,29 @@ pnpm add github:tangle-network/blueprint-ui
 
 ## Publishing
 
-Automated npm publishing is configured via GitHub Actions:
+Automated npm publishing is configured via GitHub Actions with npm Trusted Publishing (OIDC):
 - Workflow: `.github/workflows/publish-npm.yml`
 - Triggers:
   - GitHub Release published (`vX.Y.Z`)
   - Manual `workflow_dispatch`
 
-Required repository secret:
-- `NPM_TOKEN` (npm automation token with publish rights for `@tangle/blueprint-ui`)
+No long-lived npm token is required once trusted publishing is configured.
 
 Release flow:
 1. Bump `package.json` version.
 2. Create and publish a GitHub release tagged `v<same-version>`.
-3. Workflow typechecks and runs `npm publish --provenance --access public`.
+3. Workflow typechecks and runs `npm publish --access public`.
+
+Trusted publishing setup (one-time in npm):
+1. Open npm package settings for `@tangle/blueprint-ui`.
+2. Configure a trusted publisher:
+   - Provider: GitHub Actions
+   - Owner: `tangle-network`
+   - Repository: `blueprint-ui`
+   - Workflow file: `publish-npm.yml`
+   - Environment (if used): must match your workflow configuration
+
+If npm does not allow configuring trusted publishing before first publish, do a one-time bootstrap publish with a short-lived token, then switch to trusted publishing and delete the token.
 
 ## Usage
 

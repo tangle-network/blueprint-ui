@@ -20,29 +20,32 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 24
           registry-url: https://registry.npmjs.org
 
       - name: Enable Corepack
-      run: corepack enable
+        run: corepack enable
 
       - name: Install dependencies
       run: pnpm install --frozen-lockfile
 
       - name: Typecheck
-      run: pnpm typecheck
+        run: pnpm typecheck
+
+      - name: Verify runtime versions
+        run: |
+          node --version
+          npm --version
 
       - name: Ensure release tag matches package version
-      if: github.event_name == 'release'
-      run: |
-        TAG_VERSION="${GITHUB_REF_NAME#v}"
-        PKG_VERSION="$(node -p "require('./package.json').version")"
+        if: github.event_name == 'release'
+        run: |
+          TAG_VERSION="${GITHUB_REF_NAME#v}"
+          PKG_VERSION="$(node -p "require('./package.json').version")"
         if [ "$TAG_VERSION" != "$PKG_VERSION" ]; then
           echo "Release tag version ($TAG_VERSION) does not match package.json version ($PKG_VERSION)"
           exit 1
         fi
 
       - name: Publish package
-      run: npm publish --provenance --access public
-      env:
-        NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npm publish --access public
