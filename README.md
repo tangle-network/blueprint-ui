@@ -65,12 +65,7 @@ Use `@tangle/blueprint-ui` for:
 - Shared chain/contract/provisioning hooks + stores
 - Reusable cross-blueprint form and submission workflows
 
-Use `@tangle/agent-ui` for:
-- Agent chat/session/timeline UI
-- Sidecar auth/session streaming and terminal integration
-- Agent-specific markdown/tool rendering surfaces
-
-Keep in app-local `ui/` code:
+Keep in app-local code:
 - Product-specific routes and copy
 - Feature composition that is unique to a single app
 
