@@ -5,6 +5,8 @@
 
 // ── Utils ──
 export { cn } from './utils';
+export { resolveOperatorRpc } from './utils/resolveOperatorRpc';
+export { createTangleTransports, defaultConnectKitOptions, tangleWalletChains } from './utils/web3';
 export { bpThemeTokens } from './preset';
 
 // ── Stores ──
