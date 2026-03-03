@@ -82,6 +82,22 @@ Keep in app-local code:
 pnpm add github:tangle-network/blueprint-ui
 ```
 
+## Publishing
+
+Automated npm publishing is configured via GitHub Actions:
+- Workflow: `.github/workflows/publish-npm.yml`
+- Triggers:
+  - GitHub Release published (`vX.Y.Z`)
+  - Manual `workflow_dispatch`
+
+Required repository secret:
+- `NPM_TOKEN` (npm automation token with publish rights for `@tangle/blueprint-ui`)
+
+Release flow:
+1. Bump `package.json` version.
+2. Create and publish a GitHub release tagged `v<same-version>`.
+3. Workflow typechecks and runs `npm publish --provenance --access public`.
+
 ## Usage
 
 ```tsx
