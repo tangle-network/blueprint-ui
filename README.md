@@ -1,6 +1,6 @@
 ![Tangle Network Banner](https://raw.githubusercontent.com/tangle-network/tangle/refs/heads/main/assets/Tangle%20%20Banner.png)
 
-<h1 align="center">@tangle/blueprint-ui</h1>
+<h1 align="center">@tangle-network/blueprint-ui</h1>
 
 <p align="center"><em>Shared UI components, hooks, stores, and contract utilities for Tangle Blueprint applications.</em></p>
 
@@ -60,7 +60,7 @@ A TypeScript/React package that provides the building blocks for blueprint UIs o
 
 ## Package Boundaries
 
-Use `@tangle/blueprint-ui` for:
+Use `@tangle-network/blueprint-ui` for:
 - App-agnostic shell/layout primitives and design-system building blocks
 - Shared chain/contract/provisioning hooks + stores
 - Reusable cross-blueprint form and submission workflows
@@ -98,7 +98,7 @@ Release flow:
 3. Workflow typechecks and runs `npm publish --access public`.
 
 Trusted publishing setup (one-time in npm):
-1. Open npm package settings for `@tangle/blueprint-ui`.
+1. Open npm package settings for `@tangle-network/blueprint-ui`.
 2. Configure a trusted publisher:
    - Provider: GitHub Actions
    - Owner: `tangle-network`
@@ -112,10 +112,10 @@ If npm does not allow configuring trusted publishing before first publish, do a 
 
 ```tsx
 // Import hooks and utilities from the main entry
-import { useSubmitJob, useJobForm, encodeJobArgs } from '@tangle/blueprint-ui';
+import { useSubmitJob, useJobForm, encodeJobArgs } from '@tangle-network/blueprint-ui';
 
 // Import UI components from the /components entry
-import { Button, Card, FormField } from '@tangle/blueprint-ui/components';
+import { Button, Card, FormField } from '@tangle-network/blueprint-ui/components';
 ```
 
 The package uses source-level exports (`main` and `types` both point to `.ts` files). Your bundler must support TypeScript resolution — Vite works out of the box.
@@ -144,7 +144,7 @@ Licensed under either of [Apache License, Version 2.0](http://www.apache.org/lic
 
 ## Frequently Asked Questions
 
-**What is @tangle/blueprint-ui?**
+**What is @tangle-network/blueprint-ui?**
 A React component library providing UI primitives, hooks, and contract utilities for building applications on Tangle Network.
 
 **Do I need to build this package before using it?**

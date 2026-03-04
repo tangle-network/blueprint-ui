@@ -5,7 +5,7 @@
  * Each consuming app maps these to their own CSS variables by adding this
  * theme object under a `bp` key in their UnoCSS config:
  *
- *   import { bpThemeTokens } from '@tangle/blueprint-ui/preset';
+ *   import { bpThemeTokens } from '@tangle-network/blueprint-ui/preset';
  *   // theme: { colors: { bp: bpThemeTokens('cloud') } }
  *   // theme: { colors: { bp: bpThemeTokens('arena') } }
  */

@@ -1,5 +1,5 @@
 /**
- * @tangle/blueprint-ui — shared UI components.
+ * @tangle-network/blueprint-ui — shared UI components.
  *
  * Separated from index.ts so tree-shaking works cleanly for
  * consumers that only need hooks/stores/contracts.
