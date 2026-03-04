@@ -75,12 +75,14 @@ Keep in app-local code:
 - **`JobDefinition`** — Declarative job schema with field types, ABI metadata, and categories
 
 ## Installation
-## Installation
 
 ```bash
-# As a git dependency (recommended for Tangle apps)
-pnpm add github:tangle-network/blueprint-ui
+npm install @tangle-network/blueprint-ui
+# or
+pnpm add @tangle-network/blueprint-ui
 ```
+
+Package: https://www.npmjs.com/package/@tangle-network/blueprint-ui
 
 ## Publishing
 
