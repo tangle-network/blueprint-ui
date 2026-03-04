@@ -1,7 +1,7 @@
 # Project Instructions
 
 ## Mission
-`@tangle/blueprint-ui` is a shared UI and infrastructure package for multiple consumers. Treat it as a stable library, not an app.
+`@tangle-network/blueprint-ui` is a shared UI and infrastructure package for multiple consumers. Treat it as a stable library, not an app.
 
 ## Scope
 Include:

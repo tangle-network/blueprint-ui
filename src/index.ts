@@ -1,5 +1,5 @@
 /**
- * @tangle/blueprint-ui — shared utilities, stores, contracts, hooks, and types
+ * @tangle-network/blueprint-ui — shared utilities, stores, contracts, hooks, and types
  * for Tangle blueprint UIs.
  */
 
