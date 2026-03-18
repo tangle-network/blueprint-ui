@@ -77,3 +77,7 @@ export { useSessionAuth } from './hooks/useSessionAuth';
 export type { ProvisionPhase, ProvisionStatus } from './hooks/useProvisionProgress';
 export { getPhaseLabel, isTerminalPhase, useProvisionProgress } from './hooks/useProvisionProgress';
 export { useThemeValue } from './hooks/useThemeValue';
+export type { UseSidecarAuthOptions, SidecarAuth } from './hooks/useSidecarAuth';
+export { useSidecarAuth } from './hooks/useSidecarAuth';
+export { useWagmiSidecarAuth } from './hooks/useWagmiSidecarAuth';
+export { useWalletEthBalance } from './hooks/useWalletEthBalance';

@@ -43,6 +43,9 @@ export { Web3Shell } from './components/layout/Web3Shell';
 export { ChainSwitcher } from './components/layout/ChainSwitcher';
 export { ThemeToggle } from './components/layout/ThemeToggle';
 
+// ── Web3 ──
+export { ConnectWalletCta } from './components/web3/ConnectWalletCta';
+
 // ── Forms ──
 export { FormField } from './components/forms/FormField';
 export type { FormSection } from './components/forms/BlueprintJobForm';
