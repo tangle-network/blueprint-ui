@@ -31,14 +31,26 @@ export function resolveRpcUrl(envUrl?: string): string {
 
 export const rpcUrl = resolveRpcUrl();
 
-export const tangleLocal = defineChain({
-  id: Number(import.meta.env.VITE_CHAIN_ID ?? 31337),
-  name: 'Tangle Local',
-  nativeCurrency: { name: 'Ether', symbol: 'ETH', decimals: 18 },
-  rpcUrls: { default: { http: [rpcUrl] } },
-  blockExplorers: { default: { name: 'Explorer', url: '' } },
-  contracts: { multicall3: { address: '0xcA11bde05977b3631167028862bE2a173976CA11' } },
-});
+export interface LocalChainOptions {
+  chainId?: number;
+  rpcUrl?: string;
+}
+
+export function createTangleLocalChain(options: LocalChainOptions = {}) {
+  const chainId = options.chainId ?? Number(import.meta.env.VITE_CHAIN_ID ?? 31337);
+  const localRpcUrl = resolveRpcUrl(options.rpcUrl);
+
+  return defineChain({
+    id: chainId,
+    name: 'Tangle Local',
+    nativeCurrency: { name: 'Ether', symbol: 'ETH', decimals: 18 },
+    rpcUrls: { default: { http: [localRpcUrl] } },
+    blockExplorers: { default: { name: 'Explorer', url: '' } },
+    contracts: { multicall3: { address: '0xcA11bde05977b3631167028862bE2a173976CA11' } },
+  });
+}
+
+export const tangleLocal = createTangleLocalChain();
 
 export const tangleTestnet = defineChain({
   id: 3799,

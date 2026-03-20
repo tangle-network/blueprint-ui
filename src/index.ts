@@ -6,7 +6,7 @@
 // ── Utils ──
 export { cn } from './utils';
 export { resolveOperatorRpc } from './utils/resolveOperatorRpc';
-export { createTangleTransports, defaultConnectKitOptions, tangleWalletChains } from './utils/web3';
+export { createTangleTransports, defaultConnectKitOptions, getTangleWalletChains, tangleWalletChains } from './utils/web3';
 export { bpThemeTokens } from './preset';
 
 // ── Stores ──
@@ -25,6 +25,7 @@ export { tangleJobsAbi, tangleServicesAbi, tangleOperatorsAbi } from './contract
 export type { CoreAddresses, NetworkConfig } from './contracts/chains';
 export {
   resolveRpcUrl,
+  createTangleLocalChain,
   rpcUrl,
   tangleLocal,
   tangleTestnet,
@@ -36,6 +37,7 @@ export {
 } from './contracts/chains';
 export {
   selectedChainIdStore,
+  sanitizeSelectedChainId,
   publicClientStore,
   getPublicClient,
   publicClient,
