@@ -185,9 +185,9 @@ export const tangleServicesAbi = [
     type: 'event',
     name: 'ServiceRequested',
     inputs: [
-      { name: 'requester', type: 'address', indexed: true },
       { name: 'requestId', type: 'uint64', indexed: true },
       { name: 'blueprintId', type: 'uint64', indexed: true },
+      { name: 'requester', type: 'address', indexed: true },
     ],
   },
   {
