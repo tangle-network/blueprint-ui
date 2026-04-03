@@ -1,13 +1,14 @@
 import { defineChain } from 'viem';
 import { mainnet } from 'viem/chains';
 import type { Address, Chain } from 'viem';
+import { getEnvVar, isDevEnv } from '../utils/env';
 
 /**
  * Resolve RPC URL for the current environment.
  * Handles local dev (hostname swap), Vite dev proxy, and remote access.
  */
 export function resolveRpcUrl(envUrl?: string): string {
-  const configured = envUrl ?? import.meta.env.VITE_RPC_URL ?? 'http://localhost:8545';
+  const configured = envUrl ?? getEnvVar('VITE_RPC_URL') ?? 'http://localhost:8545';
   if (typeof window === 'undefined') return configured;
   try {
     const rpc = new URL(configured);
@@ -15,7 +16,7 @@ export function resolveRpcUrl(envUrl?: string): string {
     const pageHost = window.location.hostname;
     const isLocalPage = pageHost === '127.0.0.1' || pageHost === 'localhost';
     // Dev-mode proxy for LAN access to local RPC
-    if (isLocalRpc && !isLocalPage && import.meta.env.DEV) {
+    if (isLocalRpc && !isLocalPage && isDevEnv()) {
       return `${window.location.origin}/rpc-proxy`;
     }
     // Non-dev LAN access: swap hostname
@@ -37,7 +38,7 @@ export interface LocalChainOptions {
 }
 
 export function createTangleLocalChain(options: LocalChainOptions = {}) {
-  const chainId = options.chainId ?? Number(import.meta.env.VITE_CHAIN_ID ?? 31337);
+  const chainId = options.chainId ?? Number(getEnvVar('VITE_CHAIN_ID') ?? 31337);
   const localRpcUrl = resolveRpcUrl(options.rpcUrl);
 
   return defineChain({

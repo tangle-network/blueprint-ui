@@ -1,0 +1,128 @@
+:root,
+.bp-tone-cloud {
+  --bp-font-display: var(--font-display, 'Outfit', system-ui, sans-serif);
+  --bp-font-data: var(--font-data, 'IBM Plex Mono', 'JetBrains Mono', ui-monospace, monospace);
+
+  --bp-glass-bg: var(--glass-bg, transparent);
+  --bp-glass-bg-strong: var(--glass-bg-strong, var(--bp-glass-bg, transparent));
+  --bp-glass-border: var(--glass-border, transparent);
+  --bp-glass-border-hover: var(--glass-border-hover, var(--bp-glass-border, transparent));
+  --bp-glass-blur: var(--glass-blur, 0px);
+  --bp-glass-blur-strong: 24px;
+
+  --bp-elements-borderColor: var(--cloud-elements-borderColor, rgba(240, 240, 245, 0.06));
+  --bp-elements-borderColorActive: var(--cloud-elements-borderColorActive, #8B5CF6);
+
+  --bp-elements-bg-depth-1: var(--cloud-elements-bg-depth-1, #0A0A0F);
+  --bp-elements-bg-depth-2: var(--cloud-elements-bg-depth-2, #12121A);
+  --bp-elements-bg-depth-3: var(--cloud-elements-bg-depth-3, #1A1A25);
+  --bp-elements-bg-depth-4: var(--cloud-elements-bg-depth-4, #22222E);
+
+  --bp-elements-textPrimary: var(--cloud-elements-textPrimary, #F0F0F5);
+  --bp-elements-textSecondary: var(--cloud-elements-textSecondary, #8A8A9E);
+  --bp-elements-textTertiary: var(--cloud-elements-textTertiary, #5A5A6E);
+
+  --bp-elements-button-primary-background: var(--cloud-elements-button-primary-background, rgba(142, 89, 255, 0.14));
+  --bp-elements-button-primary-backgroundHover: var(--cloud-elements-button-primary-backgroundHover, rgba(142, 89, 255, 0.24));
+  --bp-elements-button-primary-text: var(--cloud-elements-button-primary-text, #A87BFF);
+
+  --bp-elements-button-secondary-background: var(--cloud-elements-button-secondary-background, rgba(240, 240, 245, 0.06));
+  --bp-elements-button-secondary-backgroundHover: var(--cloud-elements-button-secondary-backgroundHover, rgba(240, 240, 245, 0.10));
+  --bp-elements-button-secondary-text: var(--cloud-elements-button-secondary-text, #F0F0F5);
+
+  --bp-elements-button-danger-background: var(--cloud-elements-button-danger-background, rgba(255, 59, 92, 0.12));
+  --bp-elements-button-danger-backgroundHover: var(--cloud-elements-button-danger-backgroundHover, rgba(255, 59, 92, 0.20));
+  --bp-elements-button-danger-text: var(--cloud-elements-button-danger-text, #FF3B5C);
+
+  --bp-elements-icon-success: var(--cloud-elements-icon-success, #38B2AC);
+  --bp-elements-icon-error: var(--cloud-elements-icon-error, #FF4D6A);
+  --bp-elements-icon-warning: var(--cloud-elements-icon-warning, #FFB800);
+  --bp-elements-icon-primary: var(--cloud-elements-icon-primary, #F0F0F5);
+  --bp-elements-icon-secondary: var(--cloud-elements-icon-secondary, #5A5A6E);
+
+  --bp-elements-dividerColor: var(--cloud-elements-dividerColor, rgba(240, 240, 245, 0.06));
+  --bp-elements-item-backgroundHover: var(--cloud-elements-item-backgroundHover, rgba(240, 240, 245, 0.03));
+  --bp-elements-item-backgroundActive: var(--cloud-elements-item-backgroundActive, rgba(240, 240, 245, 0.06));
+  --bp-elements-focus: var(--cloud-elements-focus, #8B5CF6);
+}
+
+.bp-tone-arena {
+  --bp-elements-borderColor: var(--arena-elements-borderColor, var(--bp-elements-borderColor));
+  --bp-elements-borderColorActive: var(--arena-elements-borderColorActive, var(--bp-elements-borderColorActive));
+
+  --bp-elements-bg-depth-1: var(--arena-elements-bg-depth-1, var(--bp-elements-bg-depth-1));
+  --bp-elements-bg-depth-2: var(--arena-elements-bg-depth-2, var(--bp-elements-bg-depth-2));
+  --bp-elements-bg-depth-3: var(--arena-elements-bg-depth-3, var(--bp-elements-bg-depth-3));
+  --bp-elements-bg-depth-4: var(--arena-elements-bg-depth-4, var(--bp-elements-bg-depth-4));
+
+  --bp-elements-textPrimary: var(--arena-elements-textPrimary, var(--bp-elements-textPrimary));
+  --bp-elements-textSecondary: var(--arena-elements-textSecondary, var(--bp-elements-textSecondary));
+  --bp-elements-textTertiary: var(--arena-elements-textTertiary, var(--bp-elements-textTertiary));
+
+  --bp-elements-button-primary-background: var(--arena-elements-button-primary-background, var(--bp-elements-button-primary-background));
+  --bp-elements-button-primary-backgroundHover: var(--arena-elements-button-primary-backgroundHover, var(--bp-elements-button-primary-backgroundHover));
+  --bp-elements-button-primary-text: var(--arena-elements-button-primary-text, var(--bp-elements-button-primary-text));
+
+  --bp-elements-button-secondary-background: var(--arena-elements-button-secondary-background, var(--bp-elements-button-secondary-background));
+  --bp-elements-button-secondary-backgroundHover: var(--arena-elements-button-secondary-backgroundHover, var(--bp-elements-button-secondary-backgroundHover));
+  --bp-elements-button-secondary-text: var(--arena-elements-button-secondary-text, var(--bp-elements-button-secondary-text));
+
+  --bp-elements-button-danger-background: var(--arena-elements-button-danger-background, var(--bp-elements-button-danger-background));
+  --bp-elements-button-danger-backgroundHover: var(--arena-elements-button-danger-backgroundHover, var(--bp-elements-button-danger-backgroundHover));
+  --bp-elements-button-danger-text: var(--arena-elements-button-danger-text, var(--bp-elements-button-danger-text));
+
+  --bp-elements-icon-success: var(--arena-elements-icon-success, var(--bp-elements-icon-success));
+  --bp-elements-icon-error: var(--arena-elements-icon-error, var(--bp-elements-icon-error));
+  --bp-elements-icon-warning: var(--arena-elements-icon-warning, var(--bp-elements-icon-warning));
+  --bp-elements-icon-primary: var(--arena-elements-icon-primary, var(--bp-elements-icon-primary));
+  --bp-elements-icon-secondary: var(--arena-elements-icon-secondary, var(--bp-elements-icon-secondary));
+
+  --bp-elements-dividerColor: var(--arena-elements-dividerColor, var(--bp-elements-dividerColor));
+  --bp-elements-item-backgroundHover: var(--arena-elements-item-backgroundHover, var(--bp-elements-item-backgroundHover));
+  --bp-elements-item-backgroundActive: var(--arena-elements-item-backgroundActive, var(--bp-elements-item-backgroundActive));
+  --bp-elements-focus: var(--arena-elements-focus, var(--bp-elements-focus));
+}
+
+.font-display {
+  font-family: var(--bp-font-display);
+}
+
+.font-data {
+  font-family: var(--bp-font-data);
+  font-feature-settings: 'tnum' 1;
+}
+
+.glass {
+  background: var(--bp-glass-bg);
+  backdrop-filter: blur(var(--bp-glass-blur));
+  -webkit-backdrop-filter: blur(var(--bp-glass-blur));
+  border: 1px solid var(--bp-glass-border);
+}
+
+.glass-hover {
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+}
+
+.glass-hover:hover {
+  background: var(--bp-glass-bg-strong);
+  border-color: var(--bp-glass-border-hover);
+}
+
+.glass-card {
+  background: var(--bp-glass-bg);
+  backdrop-filter: blur(var(--bp-glass-blur));
+  -webkit-backdrop-filter: blur(var(--bp-glass-blur));
+  border: 1px solid var(--bp-glass-border);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.glass-card:hover {
+  border-color: var(--bp-glass-border-hover);
+}
+
+.glass-card-strong {
+  background: var(--bp-glass-bg-strong);
+  backdrop-filter: blur(var(--bp-glass-blur-strong));
+  -webkit-backdrop-filter: blur(var(--bp-glass-blur-strong));
+  border: 1px solid var(--bp-glass-border);
+}

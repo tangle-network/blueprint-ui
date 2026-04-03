@@ -11,7 +11,7 @@
 
 ---
 
-A TypeScript/React package that provides the building blocks for blueprint UIs on the Tangle Network. Designed to be consumed as a source dependency (no build step required) by apps using Vite or similar bundlers.
+A TypeScript/React package that provides the building blocks for blueprint UIs on the Tangle Network. The package now ships compiled ESM output plus a package-owned stylesheet so consuming apps can treat it like a normal library instead of compiling its source directly.
 
 ## What's Included
 
@@ -113,14 +113,48 @@ If npm does not allow configuring trusted publishing before first publish, do a 
 ## Usage
 
 ```tsx
+import '@tangle-network/blueprint-ui/styles.css';
+
 // Import hooks and utilities from the main entry
-import { useSubmitJob, useJobForm, encodeJobArgs } from '@tangle-network/blueprint-ui';
+import {
+  useSubmitJob,
+  useJobForm,
+  encodeJobArgs,
+  discoverOperatorsWithClient,
+} from '@tangle-network/blueprint-ui';
 
 // Import UI components from the /components entry
 import { Button, Card, FormField } from '@tangle-network/blueprint-ui/components';
 ```
 
-The package uses source-level exports (`main` and `types` both point to `.ts` files). Your bundler must support TypeScript resolution — Vite works out of the box.
+The package exports compiled files from `dist/`, so consumers do not need TypeScript-in-`node_modules` support anymore.
+
+## Styling Setup
+
+Import the package stylesheet once near your app entry:
+
+```tsx
+import '@tangle-network/blueprint-ui/styles.css';
+```
+
+That stylesheet provides:
+- package-owned helper classes used by shared components such as `glass-card`, `font-display`, and `font-data`
+- generated utility CSS for the shared components themselves
+- a small compatibility layer that maps generic `--bp-*` tokens to `cloud` tokens by default
+
+If you want the generic shared components to follow a different token family, you can either set the `--bp-*` variables directly or scope them with one of the helper classes:
+
+```tsx
+<div className="bp-tone-arena">
+  <SomeBlueprintUiComponent />
+</div>
+```
+
+## Migration Notes
+
+- Preferred path: import `@tangle-network/blueprint-ui/styles.css` and stop scanning package source from the consumer app.
+- Compatibility bridge: `src/` is still published for now, and `blueprintUiContentGlobs` remains available for apps migrating off the old source-scanning setup.
+- The next cleanup step in consumer apps is usually removing custom Vite/Uno workarounds that existed only to compile or scan `blueprint-ui` source.
 
 ## Peer Dependencies
 
@@ -150,7 +184,7 @@ Licensed under either of [Apache License, Version 2.0](http://www.apache.org/lic
 A React component library providing UI primitives, hooks, and contract utilities for building applications on Tangle Network.
 
 **Do I need to build this package before using it?**
-No. It is designed as a source dependency consumed directly by Vite or similar bundlers with no build step required.
+No. Published consumers use the compiled `dist/` output. Only this repo itself needs to run the build before publish.
 
 **What framework does blueprint-ui support?**
 React with TypeScript. Components use Radix UI primitives and Tailwind CSS for styling.

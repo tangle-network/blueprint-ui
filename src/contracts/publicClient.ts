@@ -3,8 +3,9 @@ import type { PublicClient } from 'viem';
 import { atom } from 'nanostores';
 import { getNetworks, tangleLocal, type CoreAddresses } from './chains';
 import { persistedAtom } from '../stores/persistedAtom';
+import { getEnvVar } from '../utils/env';
 
-const defaultChainId = Number(import.meta.env.VITE_CHAIN_ID ?? tangleLocal.id);
+const defaultChainId = Number(getEnvVar('VITE_CHAIN_ID') ?? tangleLocal.id);
 
 export const selectedChainIdStore = persistedAtom<number>({
   key: 'bp_selected_chain',
