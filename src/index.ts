@@ -63,7 +63,7 @@ export {
 
 // ── Hooks ──
 export type { DiscoveredOperator } from './hooks/useOperators';
-export { useOperators } from './hooks/useOperators';
+export { discoverOperatorsWithClient, useOperators } from './hooks/useOperators';
 export type { JobFormState } from './hooks/useJobForm';
 export { useJobForm } from './hooks/useJobForm';
 export type { JobQuote, UseJobPriceResult, JobPriceEntry, UseJobPricesResult } from './hooks/useJobPrice';

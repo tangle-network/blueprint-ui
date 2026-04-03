@@ -1,6 +1,7 @@
 import { useCallback, useState } from 'react';
 import { useSignMessage } from 'wagmi';
 import { getSession, setSession, removeSession, type SessionEntry } from '../stores/session';
+import { getEnvVar } from '../utils/env';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -28,7 +29,7 @@ interface UseSessionAuthOptions {
 }
 
 export function useSessionAuth({ sandboxId, apiUrl }: UseSessionAuthOptions) {
-  const baseUrl = apiUrl ?? import.meta.env.VITE_OPERATOR_API_URL ?? 'http://localhost:9090';
+  const baseUrl = apiUrl ?? getEnvVar('VITE_OPERATOR_API_URL') ?? 'http://localhost:9090';
   const { signMessageAsync } = useSignMessage();
 
   const [isAuthenticating, setIsAuthenticating] = useState(false);

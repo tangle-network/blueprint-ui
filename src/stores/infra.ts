@@ -1,7 +1,8 @@
 import { persistedAtom } from './persistedAtom';
+import { getEnvVar } from '../utils/env';
 
-const defaultBlueprintId = import.meta.env.VITE_BLUEPRINT_ID ?? '0';
-const defaultServiceId = import.meta.env.VITE_SERVICE_ID ?? import.meta.env.VITE_SERVICE_IDS?.split(',')[0] ?? '0';
+const defaultBlueprintId = getEnvVar('VITE_BLUEPRINT_ID') ?? '0';
+const defaultServiceId = getEnvVar('VITE_SERVICE_ID') ?? getEnvVar('VITE_SERVICE_IDS')?.split(',')[0] ?? '0';
 
 export interface OperatorInfo {
   address: string;

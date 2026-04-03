@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { getEnvVar } from '../utils/env';
 
 // ---------------------------------------------------------------------------
 // Types matching sandbox-runtime/src/provision_progress.rs
@@ -64,7 +65,7 @@ export function useProvisionProgress({
   const [isPolling, setIsPolling] = useState(false);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  const baseUrl = apiUrl ?? import.meta.env.VITE_OPERATOR_API_URL ?? 'http://localhost:9090';
+  const baseUrl = apiUrl ?? getEnvVar('VITE_OPERATOR_API_URL') ?? 'http://localhost:9090';
 
   const fetchProgress = useCallback(async () => {
     if (callId == null) return;
