@@ -18,6 +18,16 @@ import { resolveOperatorRpc } from '../utils/resolveOperatorRpc';
 
 // ── Types ──
 
+type SecurityCommitment = {
+  asset: { kind: number; token: Address };
+  exposureBps: number;
+};
+
+type ResourceCommitment = {
+  kind: number;
+  count: bigint;
+};
+
 export interface OperatorQuote {
   operator: Address;
   totalCost: bigint;
@@ -28,12 +38,13 @@ export interface OperatorQuote {
     totalCost: bigint;
     timestamp: bigint;
     expiry: bigint;
-    securityCommitments: readonly {
-      asset: { kind: number; token: Address };
-      exposureBps: number;
-    }[];
+    confidentiality: number;
+    securityCommitments: readonly SecurityCommitment[];
+    resourceCommitments: readonly ResourceCommitment[];
   };
   costRate: number;
+  teeAttested?: boolean;
+  teeProvider?: string;
 }
 
 export interface UseQuotesResult {
@@ -49,6 +60,20 @@ export interface UseQuotesResult {
 
 const POW_DIFFICULTY = 20;
 const WEI_PER_TNT = 1_000_000_000_000_000_000; // 10^18
+const RESOURCE_KIND_TO_ID = {
+  CPU: 0,
+  MemoryMB: 1,
+  StorageMB: 2,
+  NetworkEgressMB: 3,
+  NetworkIngressMB: 4,
+  GPU: 5,
+} as const;
+const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000' as Address;
+const DEFAULT_RESOURCE_REQUIREMENTS = [
+  { kind: 'CPU', count: 1 },
+  { kind: 'MemoryMB', count: 1024 },
+  { kind: 'StorageMB', count: 10240 },
+] as const;
 
 function sha256(data: Uint8Array): Uint8Array {
   return viemSha256(data, 'bytes');
@@ -114,6 +139,35 @@ export function formatCost(totalCost: bigint): string {
   return `${tnt.toLocaleString(undefined, { maximumFractionDigits: 2 })} TNT`;
 }
 
+function quoteConfidentiality(requireTee: boolean): number {
+  return requireTee ? 1 : 0;
+}
+
+function resourceKindToId(kind: string): number {
+  const mapped = RESOURCE_KIND_TO_ID[kind as keyof typeof RESOURCE_KIND_TO_ID];
+  if (mapped === undefined) {
+    throw new Error(`Unsupported resource kind in quote: ${kind}`);
+  }
+  return mapped;
+}
+
+function mapJsonSecurityCommitment(sc: any): SecurityCommitment {
+  return {
+    asset: {
+      kind: sc.asset?.kind ?? 0,
+      token: (sc.asset?.token ?? ZERO_ADDRESS) as Address,
+    },
+    exposureBps: sc.exposure_bps ?? 0,
+  };
+}
+
+function mapJsonResourceCommitment(resource: any): ResourceCommitment {
+  return {
+    kind: resourceKindToId(String(resource.kind ?? 'CPU')),
+    count: BigInt(resource.count ?? 0),
+  };
+}
+
 // ── Hook ──
 
 export function useQuotes(
@@ -121,6 +175,7 @@ export function useQuotes(
   blueprintId: bigint,
   ttlBlocks: bigint,
   enabled: boolean,
+  requireTee = false,
 ): UseQuotesResult {
   const [quotes, setQuotes] = useState<OperatorQuote[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -168,6 +223,7 @@ export function useQuotes(
             ttlBlocks,
             proofOfWork: proof,
             challengeTimestamp: timestamp,
+            requireTee,
           });
 
           if (!response) throw new Error('No quote returned from operator');
@@ -194,7 +250,7 @@ export function useQuotes(
     return () => {
       cancelled = true;
     };
-  }, [operators, blueprintId, ttlBlocks, enabled, fetchKey]);
+  }, [operators, blueprintId, ttlBlocks, enabled, fetchKey, requireTee]);
 
   const totalCost = quotes.reduce((sum, q) => sum + q.totalCost, 0n);
 
@@ -213,6 +269,7 @@ async function fetchPriceFromOperator(
     ttlBlocks: bigint;
     proofOfWork: Uint8Array;
     challengeTimestamp: bigint;
+    requireTee: boolean;
   },
 ): Promise<OperatorQuote | null> {
   // Try JSON endpoint (simpler, no protobuf dependency required)
@@ -225,11 +282,8 @@ async function fetchPriceFromOperator(
         ttl_blocks: String(params.ttlBlocks),
         proof_of_work: toHex(params.proofOfWork),
         challenge_timestamp: String(params.challengeTimestamp),
-        resource_requirements: [
-          { kind: 'CPU', count: 1 },
-          { kind: 'MemoryMB', count: 1024 },
-          { kind: 'StorageMB', count: 10240 },
-        ],
+        require_tee: params.requireTee,
+        resource_requirements: DEFAULT_RESOURCE_REQUIREMENTS,
       }),
       signal: AbortSignal.timeout(10_000),
     });
@@ -242,16 +296,17 @@ async function fetchPriceFromOperator(
       totalCost: BigInt(data.total_cost ?? '0'),
       signature: (data.signature ?? '0x') as `0x${string}`,
       costRate: Number(data.cost_rate ?? 0),
+      teeAttested: Boolean(data.tee_attested),
+      teeProvider: data.tee_provider || undefined,
       details: {
         blueprintId: BigInt(data.details?.blueprint_id ?? params.blueprintId),
         ttlBlocks: BigInt(data.details?.ttl_blocks ?? params.ttlBlocks),
         totalCost: BigInt(data.details?.total_cost ?? '0'),
         timestamp: BigInt(data.details?.timestamp ?? params.challengeTimestamp),
         expiry: BigInt(data.details?.expiry ?? '0'),
-        securityCommitments: (data.details?.security_commitments ?? []).map((sc: any) => ({
-          asset: { kind: sc.asset?.kind ?? 0, token: (sc.asset?.token ?? '0x0000000000000000000000000000000000000000') as Address },
-          exposureBps: sc.exposure_bps ?? 0,
-        })),
+        confidentiality: Number(data.details?.confidentiality ?? quoteConfidentiality(params.requireTee)),
+        securityCommitments: (data.details?.security_commitments ?? []).map(mapJsonSecurityCommitment),
+        resourceCommitments: (data.details?.resources ?? []).map(mapJsonResourceCommitment),
       },
     };
   } catch {
