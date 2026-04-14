@@ -103,6 +103,7 @@ export const tangleServicesAbi = [
               { name: 'totalCost', type: 'uint256' },
               { name: 'timestamp', type: 'uint64' },
               { name: 'expiry', type: 'uint64' },
+              { name: 'confidentiality', type: 'uint8' },
               {
                 name: 'securityCommitments',
                 type: 'tuple[]',
@@ -116,6 +117,14 @@ export const tangleServicesAbi = [
                     ],
                   },
                   { name: 'exposureBps', type: 'uint16' },
+                ],
+              },
+              {
+                name: 'resourceCommitments',
+                type: 'tuple[]',
+                components: [
+                  { name: 'kind', type: 'uint8' },
+                  { name: 'count', type: 'uint64' },
                 ],
               },
             ],
