@@ -52,3 +52,6 @@ export type { FormSection } from './components/forms/BlueprintJobForm';
 export { BlueprintJobForm } from './components/forms/BlueprintJobForm';
 export { FormSummary } from './components/forms/FormSummary';
 export { JobExecutionDialog } from './components/forms/JobExecutionDialog';
+
+// ── Blueprint Host ──
+export { BlueprintHostHero, BlueprintHostPanel } from './host';
