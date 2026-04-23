@@ -34,9 +34,9 @@
       "default": "./dist/index.js"
     },
     "./host": {
-      "import": "./src/host/index.ts",
-      "types": "./src/host/index.ts",
-      "default": "./src/host/index.ts"
+      "import": "./dist/host.js",
+      "types": "./dist/host.d.ts",
+      "default": "./dist/host.js"
     },
     "./components": {
       "import": "./dist/components.js",

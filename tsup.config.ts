@@ -3,6 +3,7 @@ import { defineConfig } from 'tsup';
 export default defineConfig({
   entry: {
     index: 'src/index.ts',
+    host: 'src/host/index.ts',
     components: 'src/components.ts',
     preset: 'src/preset.ts',
   },
