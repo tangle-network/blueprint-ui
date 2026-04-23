@@ -61,6 +61,46 @@ export {
   getJobById,
 } from './blueprints/registry';
 
+// ── Blueprint Host ──
+export type {
+  BlueprintAppVisibility,
+  BlueprintPublisherVerification,
+  BlueprintExperienceTier,
+  BlueprintSlugPolicy,
+  BlueprintUiSurface,
+  BlueprintResourceRoute,
+  BlueprintPermissionScope,
+  BlueprintExternalAppMode,
+  BlueprintExternalAppTrust,
+  BlueprintPublisher,
+  BlueprintResourceModel,
+  BlueprintPermissionDescriptor,
+  BlueprintExternalAppConfig,
+  BlueprintUiManifest,
+  BlueprintAppModuleBinding,
+  BlueprintAppEntry,
+  BlueprintAppResolvedView,
+} from './host';
+export {
+  buildCanonicalBlueprintSlug,
+  resolveBlueprintAppView,
+  toBlueprintAppEntry,
+  getBlueprintExperienceTierLabel,
+  getBlueprintSlugPolicyLabel,
+  getBlueprintSurfaceLabel,
+  getBlueprintPublisherVerificationLabel,
+  getExternalAppTrustLabel,
+  isVerifiedBlueprintPublisher,
+  canPublisherClaimSlug,
+  isTrustedExternalAppHost,
+  getBlueprintPath,
+  getBlueprintServicePath,
+  sanitizeBlueprintSlugPart,
+  deriveBlueprintRequestedSlug,
+} from './host';
+export type { BlueprintHostHeroProps, BlueprintHostPanelProps } from './host';
+export { BlueprintHostHero, BlueprintHostPanel } from './host';
+
 // ── Hooks ──
 export type { DiscoveredOperator } from './hooks/useOperators';
 export { discoverOperatorsWithClient, useOperators } from './hooks/useOperators';
