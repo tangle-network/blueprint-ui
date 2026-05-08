@@ -98,6 +98,9 @@ export const tangleServicesAbi = [
             name: 'details',
             type: 'tuple',
             components: [
+              // tnt-core v0.13.0: `requester` is the first field of QuoteDetails.
+              // The contract enforces `requester == msg.sender` and rejects address(0).
+              { name: 'requester', type: 'address' },
               { name: 'blueprintId', type: 'uint64' },
               { name: 'ttlBlocks', type: 'uint64' },
               { name: 'totalCost', type: 'uint256' },
