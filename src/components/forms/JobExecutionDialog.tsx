@@ -1,4 +1,6 @@
 import { useStore } from '@nanostores/react';
+import { useAccount } from 'wagmi';
+import type { Address } from 'viem';
 import type { JobDefinition } from '../../blueprints/registry';
 import { useJobForm } from '../../hooks/useJobForm';
 import { useSubmitJob } from '../../hooks/useSubmitJob';
@@ -35,18 +37,24 @@ export function JobExecutionDialog({
   onSuccess,
 }: JobExecutionDialogProps) {
   const infra = useStore(infraStore);
+  const { address } = useAccount();
   const { values, errors, onChange, validate, reset } = useJobForm(job);
   const { submitJob, status, error: txError, txHash, reset: resetTx } = useSubmitJob();
 
-  // Per-job RFQ: fetch price from operator before submission
+  // Per-job RFQ: fetch price from operator before submission.
+  // tnt-core v0.13.0 binds quotes to the future caller — only run the hook
+  // once a wallet address is available.
   const operatorRpcUrl = infra.serviceInfo?.operators?.[0]?.rpcAddress;
   const blueprintId = BigInt(infra.blueprintId || '0');
+  const ZERO: Address = '0x0000000000000000000000000000000000000000';
+  const requester: Address = (address ?? ZERO) as Address;
   const { quote, isLoading: priceLoading, isSolvingPow, formattedPrice, error: priceError } = useJobPrice(
     operatorRpcUrl,
     serviceId,
     job.id,
     blueprintId,
-    open && !!operatorRpcUrl && serviceId > 0n,
+    open && !!operatorRpcUrl && serviceId > 0n && !!address,
+    requester,
   );
 
   // Fallback price from multiplier (base rate = 0.001 TNT = 1e15 wei)

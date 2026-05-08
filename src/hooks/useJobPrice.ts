@@ -18,6 +18,12 @@ import { solvePoW, formatCost } from './useQuotes';
 // ── Types ──
 
 export interface JobQuote {
+  /**
+   * Address of the account that will submit `submitJobFromQuote`.
+   * Required since tnt-core v0.13.0 — the contract enforces
+   * `requester == msg.sender` and rejects `address(0)` (no wildcard quotes).
+   */
+  requester: Address;
   serviceId: bigint;
   jobIndex: number;
   price: bigint;
@@ -59,13 +65,47 @@ function resolveOperatorRpc(raw: string): string {
 
 // ── Hook ──
 
+const ZERO_ADDRESS_LOWER = '0x0000000000000000000000000000000000000000';
+
+/**
+ * Defensive guard: throws when a consumer enables fetching but has not
+ * supplied a non-zero `requester`. Skipped when `enabled` is false so
+ * components can pass a derived value (e.g. `address ?? ZERO`) before the
+ * wallet has connected.
+ */
+function assertRequester(requester: Address, hookName: string, enabled: boolean): void {
+  if (!enabled) return;
+  if (!requester || requester.toLowerCase() === ZERO_ADDRESS_LOWER) {
+    throw new Error(
+      `${hookName}: \`requester\` is required and must be a non-zero address when \`enabled=true\`. ` +
+        'Pass `useAccount().address` from wagmi. tnt-core v0.13.0 contracts ' +
+        'reject quotes whose requester is address(0) or != msg.sender.',
+    );
+  }
+}
+
+/**
+ * Fetches a signed `JobQuote` for `submitJobFromQuote`.
+ *
+ * @param operatorRpcUrl Operator RPC base URL (e.g. from `getOperatorPreferences`).
+ * @param serviceId      Target service id.
+ * @param jobIndex       Job index within the blueprint.
+ * @param blueprintId    Blueprint id (used for the PoW challenge domain).
+ * @param enabled        Gate to disable fetching while inputs settle.
+ * @param requester      Address that will submit `submitJobFromQuote` —
+ *                       must equal `msg.sender` at submission time. Required
+ *                       since tnt-core v0.13.0; the contract rejects
+ *                       `address(0)` and any mismatch.
+ */
 export function useJobPrice(
   operatorRpcUrl: string | undefined,
   serviceId: bigint,
   jobIndex: number,
   blueprintId: bigint,
   enabled: boolean,
+  requester: Address,
 ): UseJobPriceResult {
+  assertRequester(requester, 'useJobPrice', enabled);
   const [quote, setQuote] = useState<JobQuote | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isSolvingPow, setIsSolvingPow] = useState(false);
@@ -107,6 +147,9 @@ export function useJobPrice(
             job_index: jobIndex,
             proof_of_work: toHex(proof),
             challenge_timestamp: String(timestamp),
+            // tnt-core v0.13.0: operators sign `requester` into JobQuoteDetails;
+            // the contract enforces `requester == msg.sender` on submission.
+            requester,
           }),
           signal: AbortSignal.timeout(10_000),
         });
@@ -119,6 +162,7 @@ export function useJobPrice(
         if (cancelledRef.current) return;
 
         setQuote({
+          requester: ((data.requester as Address | undefined) ?? requester),
           serviceId: BigInt(data.service_id ?? serviceId),
           jobIndex: data.job_index ?? jobIndex,
           price: BigInt(data.price ?? '0'),
@@ -143,7 +187,7 @@ export function useJobPrice(
     return () => {
       cancelledRef.current = true;
     };
-  }, [operatorRpcUrl, serviceId, jobIndex, blueprintId, enabled, fetchKey]);
+  }, [operatorRpcUrl, serviceId, jobIndex, blueprintId, enabled, fetchKey, requester]);
 
   const formattedPrice = quote ? formatCost(quote.price) : '--';
 
@@ -171,13 +215,20 @@ export interface UseJobPricesResult {
   refetch: () => void;
 }
 
+/**
+ * Batch counterpart to {@link useJobPrice}. Same `requester` contract: the
+ * caller must pass `useAccount().address`; the field is required since
+ * tnt-core v0.13.0.
+ */
 export function useJobPrices(
   operatorRpcUrl: string | undefined,
   serviceId: bigint,
   blueprintId: bigint,
   jobIndexes: { index: number; name: string; multiplier: number }[],
   enabled: boolean,
+  requester: Address,
 ): UseJobPricesResult {
+  assertRequester(requester, 'useJobPrices', enabled);
   const [prices, setPrices] = useState<JobPriceEntry[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -214,6 +265,8 @@ export function useJobPrices(
                 job_index: job.index,
                 proof_of_work: toHex(proof),
                 challenge_timestamp: String(timestamp),
+                // tnt-core v0.13.0: see useJobPrice notes.
+                requester,
               }),
               signal: AbortSignal.timeout(10_000),
             });
@@ -237,6 +290,7 @@ export function useJobPrices(
               formattedPrice: formatCost(price),
               mode: (data.mode ?? 'flat') as 'flat' | 'dynamic' | 'free',
               quote: {
+                requester: ((data.requester as Address | undefined) ?? requester),
                 serviceId: BigInt(data.service_id ?? serviceId),
                 jobIndex: job.index,
                 price,
@@ -277,7 +331,7 @@ export function useJobPrices(
     return () => {
       cancelled = true;
     };
-  }, [operatorRpcUrl, serviceId, blueprintId, jobIndexes, enabled, fetchKey]);
+  }, [operatorRpcUrl, serviceId, blueprintId, jobIndexes, enabled, fetchKey, requester]);
 
   return { prices, isLoading, error, refetch };
 }
