@@ -33,6 +33,12 @@ export interface OperatorQuote {
   totalCost: bigint;
   signature: `0x${string}`;
   details: {
+    /**
+     * Address of the account that will submit `createServiceFromQuotes`.
+     * Required since tnt-core v0.13.0 — the contract enforces
+     * `requester == msg.sender` and rejects `address(0)` (no wildcard quotes).
+     */
+    requester: Address;
     blueprintId: bigint;
     ttlBlocks: bigint;
     totalCost: bigint;
@@ -170,13 +176,40 @@ function mapJsonResourceCommitment(resource: any): ResourceCommitment {
 
 // ── Hook ──
 
+const ZERO_ADDRESS_LOWER = ZERO_ADDRESS.toLowerCase();
+
+/**
+ * Fetches signed `OperatorQuote` payloads from a set of operators for
+ * `createServiceFromQuotes`.
+ *
+ * @param operators   Operators discovered from the on-chain registry.
+ * @param blueprintId Target blueprint id.
+ * @param ttlBlocks   Requested service TTL in blocks.
+ * @param enabled     Gate to disable fetching (e.g. while inputs settle).
+ * @param requester   Address that will submit `createServiceFromQuotes` —
+ *                    must equal `msg.sender` at submission time. Required
+ *                    since tnt-core v0.13.0; the contract rejects
+ *                    `address(0)` and any mismatch.
+ * @param requireTee  If true, asks operators for TEE-attested quotes.
+ */
 export function useQuotes(
   operators: DiscoveredOperator[],
   blueprintId: bigint,
   ttlBlocks: bigint,
   enabled: boolean,
+  requester: Address,
   requireTee = false,
 ): UseQuotesResult {
+  // Defensive guard: only assert when the caller has actually opted in via
+  // `enabled`. This lets components compute `requester` from
+  // `useAccount().address` and pass `enabled=false` until the wallet connects.
+  if (enabled && (!requester || requester.toLowerCase() === ZERO_ADDRESS_LOWER)) {
+    throw new Error(
+      'useQuotes: `requester` is required and must be a non-zero address when `enabled=true`. ' +
+        'Pass `useAccount().address` from wagmi. tnt-core v0.13.0 contracts ' +
+        'reject quotes whose requester is address(0) or != msg.sender.',
+    );
+  }
   const [quotes, setQuotes] = useState<OperatorQuote[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isSolvingPow, setIsSolvingPow] = useState(false);
@@ -224,6 +257,7 @@ export function useQuotes(
             proofOfWork: proof,
             challengeTimestamp: timestamp,
             requireTee,
+            requester,
           });
 
           if (!response) throw new Error('No quote returned from operator');
@@ -250,7 +284,7 @@ export function useQuotes(
     return () => {
       cancelled = true;
     };
-  }, [operators, blueprintId, ttlBlocks, enabled, fetchKey, requireTee]);
+  }, [operators, blueprintId, ttlBlocks, enabled, fetchKey, requireTee, requester]);
 
   const totalCost = quotes.reduce((sum, q) => sum + q.totalCost, 0n);
 
@@ -270,6 +304,7 @@ async function fetchPriceFromOperator(
     proofOfWork: Uint8Array;
     challengeTimestamp: bigint;
     requireTee: boolean;
+    requester: Address;
   },
 ): Promise<OperatorQuote | null> {
   // Try JSON endpoint (simpler, no protobuf dependency required)
@@ -283,6 +318,10 @@ async function fetchPriceFromOperator(
         proof_of_work: toHex(params.proofOfWork),
         challenge_timestamp: String(params.challengeTimestamp),
         require_tee: params.requireTee,
+        // tnt-core v0.13.0: bind the quote to the future caller. Operators
+        // sign this address into QuoteDetails; the contract enforces
+        // `requester == msg.sender`.
+        requester: params.requester,
         resource_requirements: DEFAULT_RESOURCE_REQUIREMENTS,
       }),
       signal: AbortSignal.timeout(10_000),
@@ -299,6 +338,10 @@ async function fetchPriceFromOperator(
       teeAttested: Boolean(data.tee_attested),
       teeProvider: data.tee_provider || undefined,
       details: {
+        // Prefer the operator-signed value; fall back to the hook's input.
+        // If the operator returns a mismatched requester the contract will
+        // revert at submission, so callers should still verify equality.
+        requester: ((data.details?.requester as Address | undefined) ?? params.requester),
         blueprintId: BigInt(data.details?.blueprint_id ?? params.blueprintId),
         ttlBlocks: BigInt(data.details?.ttl_blocks ?? params.ttlBlocks),
         totalCost: BigInt(data.details?.total_cost ?? '0'),
