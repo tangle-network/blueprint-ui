@@ -159,10 +159,15 @@ export const TangleParentHarness: FC<HarnessProps> = ({
   callJobHandler.current = onCallJob;
   const seenHandshake = useRef(false);
 
-  // Listen for iframe → "parent" messages. Since the harness shares the
-  // window, `window.postMessage` with the synthetic origin is the easiest
-  // wire — the iframe SDK posts to `window.parent`, which in same-window
-  // mode IS this listener.
+  // Bridge the iframe → "parent" channel. The SDK posts via
+  // `window.parent.postMessage(msg, parentOrigin)`. In a real iframe that
+  // crosses a window boundary; in the harness both live in one window, where
+  // a same-window `postMessage` with a synthetic targetOrigin is *not*
+  // delivered (the origin won't match the document's real origin in jsdom /
+  // happy-dom / a real browser). So we intercept `window.parent.postMessage`
+  // directly — identical to how production parents receive frames, minus the
+  // window hop. Replies still travel back as dispatched `message` events
+  // tagged with HARNESS_ORIGIN, which the SDK's listener filters for.
   useEffect(() => {
     const reply = (message: ParentMessage) => {
       window.dispatchEvent(
@@ -199,13 +204,7 @@ export const TangleParentHarness: FC<HarnessProps> = ({
       }
     };
 
-    const handler = async (event: MessageEvent) => {
-      // The iframe posts via `window.parent.postMessage(msg, parentOrigin)`.
-      // In same-window mode, that fires a message event on this same window
-      // with origin = parentOrigin. Filter out events the harness itself
-      // dispatched (origin === HARNESS_ORIGIN) — those are replies.
-      if (event.origin === HARNESS_ORIGIN) return;
-      const data = event.data;
+    const handleInbound = async (data: unknown) => {
       if (typeof data !== 'object' || data === null) return;
       const message = data as { kind?: string; correlationId?: string };
 
@@ -338,8 +337,26 @@ export const TangleParentHarness: FC<HarnessProps> = ({
         }
       }
     };
-    window.addEventListener('message', handler);
-    return () => window.removeEventListener('message', handler);
+
+    // Route the iframe's outbound posts straight into the handler. We expose
+    // only `postMessage` — the SDK never touches other `window.parent`
+    // members — and restore the original on teardown.
+    const originalParent = window.parent;
+    const proxyParent = {
+      postMessage: (message: unknown) => {
+        void handleInbound(message);
+      },
+    } as unknown as Window;
+    Object.defineProperty(window, 'parent', {
+      configurable: true,
+      get: () => proxyParent,
+    });
+    return () => {
+      Object.defineProperty(window, 'parent', {
+        configurable: true,
+        value: originalParent,
+      });
+    };
   }, [appId, currentWallet, currentService]);
 
   // Re-broadcast when state changes.
