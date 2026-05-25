@@ -85,6 +85,8 @@ export type TangleIframeClientOptions = {
 };
 
 const DEFAULT_REQUEST_TIMEOUT_MS = 60_000;
+const HANDSHAKE_RETRY_MS = 250;
+const HANDSHAKE_RETRY_BUDGET_MS = 10_000;
 const NULL_WALLET: WalletSnapshot = {
   address: null,
   chainId: null,
@@ -112,6 +114,7 @@ export class TangleIframeClient {
   private handshakeAcked = false;
   private handshakeWaiters: Array<() => void> = [];
   private installed = false;
+  private handshakeRetry: ReturnType<typeof setInterval> | null = null;
   private listeners: {
     [K in keyof ClientEventMap]: Set<Listener<K>>;
   } = {
@@ -129,11 +132,27 @@ export class TangleIframeClient {
     this.installed = true;
     window.addEventListener('message', this.handleParentMessage);
     this.postHandshake();
+    // Stand up a bounded retry. The parent may attach its listener slightly
+    // after the iframe loads (React mounts child effects before parent
+    // effects; a real parent may create the frame before its handler is
+    // ready), so a single handshake can be dropped. Retry until acked.
+    if (this.handshakeRetry === null) {
+      let elapsed = 0;
+      this.handshakeRetry = setInterval(() => {
+        elapsed += HANDSHAKE_RETRY_MS;
+        if (this.handshakeAcked || elapsed >= HANDSHAKE_RETRY_BUDGET_MS) {
+          this.clearHandshakeRetry();
+          return;
+        }
+        this.postHandshake();
+      }, HANDSHAKE_RETRY_MS);
+    }
   }
 
   uninstall(): void {
     if (!this.installed || typeof window === 'undefined') return;
     this.installed = false;
+    this.clearHandshakeRetry();
     window.removeEventListener('message', this.handleParentMessage);
     for (const [, pending] of this.pendingJobs) {
       clearTimeout(pending.timer);
@@ -272,6 +291,13 @@ export class TangleIframeClient {
 
   // ── Internals ───────────────────────────────────────────────────────────
 
+  private clearHandshakeRetry(): void {
+    if (this.handshakeRetry !== null) {
+      clearInterval(this.handshakeRetry);
+      this.handshakeRetry = null;
+    }
+  }
+
   private postHandshake(): void {
     this.postToParent({
       kind: 'tangle.app.handshake',
@@ -297,6 +323,7 @@ export class TangleIframeClient {
     switch (message.kind) {
       case 'tangle.app.handshakeAck':
         this.handshakeAcked = true;
+        this.clearHandshakeRetry();
         for (const resolve of this.handshakeWaiters) resolve();
         this.handshakeWaiters = [];
         return;
