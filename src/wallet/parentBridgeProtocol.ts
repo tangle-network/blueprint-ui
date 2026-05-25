@@ -42,6 +42,37 @@ export type SignTransactionRequest = {
   value?: string;
 };
 
+// EIP-712 typed-data signing for publishers that need to sign custom message
+// shapes — operator envelopes, off-chain attestations, claim proofs, etc.
+// The parent renders the typed-data fields in its approval modal so the user
+// can audit what they're signing. Iframes never see the wallet's signing key
+// or private state.
+//
+// Shape mirrors viem's `signTypedData` argument: `domain` + `types` (without
+// the EIP712Domain entry — viem injects it) + `primaryType` + `message`.
+// Validation on the parent side rejects payloads that are obviously
+// malformed (missing primaryType, types map empty, etc.) but does NOT
+// re-shape the message — the user is the one who decides whether to sign.
+export type SignTypedDataRequest = {
+  kind: 'tangle.app.signTypedData';
+  correlationId: string;
+  chainId: number;
+  domain: Readonly<{
+    name?: string;
+    version?: string;
+    chainId?: number;
+    verifyingContract?: Address;
+    salt?: Hex;
+  }>;
+  /** EIP-712 types map; do NOT include the EIP712Domain entry (the parent
+   * injects it derived from `domain`). */
+  types: Readonly<Record<string, ReadonlyArray<{ name: string; type: string }>>>;
+  /** Top-level type name in `types` whose values appear in `message`. */
+  primaryType: string;
+  /** The actual typed-data values. Shape matches `types[primaryType]`. */
+  message: Readonly<Record<string, unknown>>;
+};
+
 // ─── Parent → Iframe messages ────────────────────────────────────────────────
 
 export type HandshakeAck = {
@@ -70,6 +101,10 @@ export type SignMessageResult = {
 export type SignTransactionResult = {
   kind: 'tangle.app.signTransactionResult';
 } & ResultEnvelope<{ txHash: Hex }>;
+
+export type SignTypedDataResult = {
+  kind: 'tangle.app.signTypedDataResult';
+} & ResultEnvelope<{ signature: Hex }>;
 
 export type AccountChanged = {
   kind: 'tangle.app.accountChanged';
@@ -105,6 +140,30 @@ export type ServiceContextJob = {
   readonly inputSchema?: unknown;
 };
 
+/**
+ * Chain configuration the parent broadcasts to the iframe along with
+ * service context. Iframes use this to build a `viem` public client for
+ * READ-ONLY queries (`useTanglePublicClient` is the convenience hook).
+ *
+ * Iframes can ignore this and roll their own RPC config — particularly
+ * when they need to read from chains OTHER than the active one (e.g. a
+ * trading dapp pulling oracle data from mainnet while the active service
+ * lives on Base Sepolia). The injected client is a hint, not a constraint.
+ *
+ * `rpcUrl` is the public RPC the parent uses, NOT a wallet RPC. Iframes
+ * cannot sign or submit with this URL; signing always routes upstream via
+ * the bridge.
+ */
+export type ChainContext = {
+  readonly id: number;
+  readonly name: string;
+  readonly rpcUrl: string;
+  /** Block-explorer base URL — useful for rendering tx links. */
+  readonly blockExplorerUrl?: string;
+  /** Native currency metadata for cost displays. */
+  readonly nativeCurrency?: { readonly name: string; readonly symbol: string; readonly decimals: number };
+};
+
 export type ServiceContextBroadcast = {
   kind: 'tangle.app.serviceContext';
   readonly blueprintId: string;
@@ -112,6 +171,10 @@ export type ServiceContextBroadcast = {
   readonly operators: readonly ServiceContextOperator[];
   readonly jobs: readonly ServiceContextJob[];
   readonly mode: string | null;
+  /** Active chain the parent is connected to; iframes can build a viem
+   * publicClient against this for convenience. Optional for backwards
+   * compatibility with parents that haven't been upgraded yet. */
+  readonly chain?: ChainContext;
 };
 
 // ─── Job invocation (iframe ↔ parent) ────────────────────────────────────────
@@ -161,6 +224,7 @@ export type ParentMessage =
   | SwitchChainResult
   | SignMessageResult
   | SignTransactionResult
+  | SignTypedDataResult
   | AccountChanged
   | ChainChanged
   | ServiceContextBroadcast
@@ -172,6 +236,7 @@ export type IframeRequest =
   | SwitchChainRequest
   | SignMessageRequest
   | SignTransactionRequest
+  | SignTypedDataRequest
   | CallJobRequest;
 
 // The zero address used by the parent when no wallet is connected. The parent

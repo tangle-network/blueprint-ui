@@ -48,6 +48,8 @@ export {
   useTangleAddress,
   useTangleReady,
   useTangleMode,
+  useChainContext,
+  useTanglePublicClient,
 } from './hooks';
 
 export {
@@ -63,10 +65,13 @@ export {
 // against the same wire format if they want to skip the React layer.
 export type {
   CallJobRequest,
+  ChainContext,
   JobInputs,
   JobResultEvent,
   JobResultStatus,
   ServiceContextBroadcast,
   ServiceContextJob,
   ServiceContextOperator,
+  SignTypedDataRequest,
+  SignTypedDataResult,
 } from '../wallet/parentBridgeProtocol';

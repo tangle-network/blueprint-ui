@@ -14,6 +14,7 @@ import {
   NO_WALLET_ADDRESS,
   TANGLE_IFRAME_PROTOCOL_VERSION,
   type CallJobRequest,
+  type ChainContext,
   type JobInputs,
   type JobResultEvent,
   type JobResultStatus,
@@ -21,6 +22,7 @@ import {
   type ServiceContextBroadcast,
   type ServiceContextJob,
   type ServiceContextOperator,
+  type SignTypedDataRequest,
 } from '../wallet/parentBridgeProtocol';
 
 export type WalletSnapshot = {
@@ -35,6 +37,9 @@ export type ServiceSnapshot = {
   readonly operators: readonly ServiceContextOperator[];
   readonly jobs: readonly ServiceContextJob[];
   readonly mode: string | null;
+  /** Chain context broadcast by the parent — drives `useTanglePublicClient`.
+   * `null` when the parent hasn't sent one (older parent or dev mode). */
+  readonly chain: ChainContext | null;
 };
 
 export type JobInvocation = {
@@ -91,6 +96,7 @@ const NULL_SERVICE: ServiceSnapshot = {
   operators: [],
   jobs: [],
   mode: null,
+  chain: null,
 };
 
 type PendingJob = {
@@ -186,6 +192,31 @@ export class TangleIframeClient {
     return this.dispatchWallet('tangle.app.switchChain', { chainId }).then(
       (data) => (data as { chainId: number }).chainId,
     );
+  }
+
+  /**
+   * EIP-712 typed-data signing. The parent renders the typed-data fields in
+   * its approval modal; the user audits what they're signing. Use for
+   * operator envelopes, off-chain attestations, anything that needs a
+   * signature outside the standard blueprint-job RFQ flow.
+   *
+   * Shape mirrors viem's `signTypedData` argument. Do not include the
+   * EIP712Domain entry in `types` — the parent injects it from `domain`.
+   */
+  async signTypedData(args: {
+    domain: SignTypedDataRequest['domain'];
+    types: SignTypedDataRequest['types'];
+    primaryType: string;
+    message: Readonly<Record<string, unknown>>;
+  }): Promise<Hex> {
+    await this.ensureBootstrapped();
+    return this.dispatchWallet('tangle.app.signTypedData', {
+      chainId: this.wallet.chainId ?? 0,
+      domain: args.domain,
+      types: args.types,
+      primaryType: args.primaryType,
+      message: args.message,
+    }).then((data) => (data as { signature: Hex }).signature);
   }
 
   // ── Job invocation ──────────────────────────────────────────────────────
@@ -312,6 +343,7 @@ export class TangleIframeClient {
     kind:
       | 'tangle.app.signMessage'
       | 'tangle.app.signTransaction'
+      | 'tangle.app.signTypedData'
       | 'tangle.app.switchChain',
     payload: Record<string, unknown>,
   ): Promise<unknown> {
@@ -323,6 +355,7 @@ export class TangleIframeClient {
         {
           'tangle.app.signMessage': 'tangle.app.signMessageResult',
           'tangle.app.signTransaction': 'tangle.app.signTransactionResult',
+          'tangle.app.signTypedData': 'tangle.app.signTypedDataResult',
           'tangle.app.switchChain': 'tangle.app.switchChainResult',
         } as const
       )[kind];
@@ -407,6 +440,7 @@ export class TangleIframeClient {
       operators: broadcast.operators,
       jobs: broadcast.jobs,
       mode: broadcast.mode,
+      chain: broadcast.chain ?? null,
     };
     this.service = next;
     this.emit('service', next);

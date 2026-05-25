@@ -57,6 +57,7 @@ const NULL_SERVICE: ServiceSnapshot = {
   operators: [],
   jobs: [],
   mode: null,
+  chain: null,
 };
 
 /**
