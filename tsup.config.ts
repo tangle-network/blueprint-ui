@@ -6,6 +6,8 @@ export default defineConfig({
     components: 'src/components.ts',
     preset: 'src/preset.ts',
     'wallet/index': 'src/wallet/index.ts',
+    'iframe/index': 'src/iframe/index.ts',
+    'iframe/testing-index': 'src/iframe/testing-index.ts',
   },
   format: ['esm'],
   dts: true,

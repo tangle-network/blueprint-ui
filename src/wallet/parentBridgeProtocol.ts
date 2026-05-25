@@ -81,6 +81,80 @@ export type ChainChanged = {
   chainId: number;
 };
 
+// ─── Service context (parent → iframe) ──────────────────────────────────────
+//
+// Iframe blueprints embedded by Tangle Cloud need to know which service +
+// blueprint they're rendering for, plus which operators are quoted. The
+// parent broadcasts this on mount and on every change (mode picker swap,
+// new service activation, operator delta). The iframe just reads — it
+// doesn't query the chain itself.
+//
+// The thin-iframe SDK exposes this as `useTangleService()`. Iframes that
+// use the full wagmi connector path can still listen to `serviceContext`
+// for routing convenience.
+
+export type ServiceContextOperator = {
+  readonly address: Address;
+  readonly rpcAddress: string | undefined;
+  readonly status: 'active' | 'inactive' | 'unknown';
+};
+
+export type ServiceContextJob = {
+  readonly index: number;
+  readonly name: string;
+  readonly inputSchema?: unknown;
+};
+
+export type ServiceContextBroadcast = {
+  kind: 'tangle.app.serviceContext';
+  readonly blueprintId: string;
+  readonly serviceId: string | null;
+  readonly operators: readonly ServiceContextOperator[];
+  readonly jobs: readonly ServiceContextJob[];
+  readonly mode: string | null;
+};
+
+// ─── Job invocation (iframe ↔ parent) ────────────────────────────────────────
+//
+// Instead of the iframe wiring up its own EIP-712 quote / sign / submit
+// flow, it sends a single CallJob request upstream. The parent does the
+// whole dance (fetch RFQ quote, build typed data, request user signature,
+// submit on-chain) and streams results back. The iframe never touches
+// chain logic.
+
+export type JobInputs = Readonly<Record<string, unknown>>;
+
+export type CallJobRequest = {
+  kind: 'tangle.app.callJob';
+  correlationId: string;
+  /** Job index within the blueprint, e.g. 0 for the primary entry-point. */
+  jobIndex: number;
+  /** Free-form inputs validated by the parent against the on-chain ABI. */
+  inputs: JobInputs;
+  /**
+   * Whether the publisher wants intermediate progress (streaming chunks)
+   * or just the terminal result. Streaming jobs (LLM generation, video
+   * encode) opt in; one-shots (embeddings, classifications) don't.
+   */
+  stream?: boolean;
+};
+
+export type JobResultStatus = 'pending' | 'streaming' | 'success' | 'error';
+
+export type JobResultEvent = {
+  kind: 'tangle.app.jobResult';
+  correlationId: string;
+  status: JobResultStatus;
+  /** Present on `streaming` and `success`. Shape is publisher-defined. */
+  data?: unknown;
+  /** Present on `streaming` only — incremental chunk for live UI. */
+  chunk?: unknown;
+  /** Present on `error`. Human-readable. */
+  error?: string;
+  /** Optional progress metadata (e.g. `{ percent: 0.42, eta_ms: 8000 }`). */
+  progress?: { readonly percent?: number; readonly eta_ms?: number };
+};
+
 export type ParentMessage =
   | HandshakeAck
   | ReadAccountResult
@@ -88,7 +162,17 @@ export type ParentMessage =
   | SignMessageResult
   | SignTransactionResult
   | AccountChanged
-  | ChainChanged;
+  | ChainChanged
+  | ServiceContextBroadcast
+  | JobResultEvent;
+
+export type IframeRequest =
+  | HandshakeRequest
+  | ReadAccountRequest
+  | SwitchChainRequest
+  | SignMessageRequest
+  | SignTransactionRequest
+  | CallJobRequest;
 
 // The zero address used by the parent when no wallet is connected. The parent
 // always responds to readAccount with an address; this sentinel means "no
