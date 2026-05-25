@@ -1,0 +1,74 @@
+// Determine which origin to trust as the parent dapp.
+//
+// `document.referrer` is the *initial* embedder — it's set when the iframe is
+// first loaded and survives reloads (though it can be cleared by `referrerpolicy`
+// or by the embedder). The Tangle Cloud iframe wrapper deliberately omits
+// `referrerpolicy="no-referrer"` so we get the embedder's origin here.
+//
+// We compare it against an allowlist of known Tangle Cloud origins. If it
+// matches, that's the parent. Otherwise the iframe is being loaded directly
+// (standalone domain visit, dev server, untrusted embedder) and the bridge
+// stays disabled — the app falls back to its normal injected/WC wallet path.
+
+/**
+ * Default Tangle Cloud origins. Consumers (agent-sandbox UI,
+ * trading-arena, future iframe blueprints) pass app-specific additions
+ * via `extraOrigins` rather than mutating this list.
+ */
+export const TANGLE_CLOUD_ORIGINS_DEFAULT = Object.freeze([
+  'https://cloud.tangle.tools',
+  'https://develop.cloud.tangle.tools',
+  // Local dev (Vite default port for tangle-cloud + Netlify dev preview).
+  'http://localhost:4300',
+  'http://localhost:8888',
+] as const);
+
+function originFromReferrer(): string | null {
+  if (typeof document === 'undefined') return null;
+  const ref = document.referrer;
+  if (!ref) return null;
+  try {
+    return new URL(ref).origin;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Returns the parent origin to bridge to, or null when no trusted parent is
+ * detected. Caller should skip installing the bridge connector when this
+ * returns null.
+ *
+ * `extraOrigins` is the application's escape hatch for staging or dev
+ * deploys not covered by the default list. The library deliberately does
+ * not read environment variables itself (consumers may bundle for non-Vite
+ * runtimes); the consuming app threads `import.meta.env.VITE_*` or
+ * `process.env.*` in itself.
+ *
+ * Falls back to a `?parent=<origin>` query parameter when no referrer is
+ * present (some browsers strip referrer from cross-origin loads). Useful
+ * for dev embedding flows.
+ */
+export function detectTangleCloudParentOrigin(
+  options: { extraOrigins?: readonly string[] } = {},
+): string | null {
+  if (typeof window === 'undefined' || window.parent === window) {
+    return null;
+  }
+  const allowlist = new Set<string>([
+    ...TANGLE_CLOUD_ORIGINS_DEFAULT,
+    ...(options.extraOrigins ?? []),
+  ]);
+  const referrerOrigin = originFromReferrer();
+  if (referrerOrigin && allowlist.has(referrerOrigin)) {
+    return referrerOrigin;
+  }
+  try {
+    const url = new URL(window.location.href);
+    const explicit = url.searchParams.get('parent');
+    if (explicit && allowlist.has(explicit)) return explicit;
+  } catch {
+    // ignore
+  }
+  return null;
+}
