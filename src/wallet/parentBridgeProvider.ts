@@ -15,6 +15,10 @@ import {
   NO_WALLET_ADDRESS,
   TANGLE_IFRAME_PROTOCOL_VERSION,
   type ParentMessage,
+  type ReadAccountResult,
+  type SignMessageResult,
+  type SignTransactionResult,
+  type SwitchChainResult,
 } from './parentBridgeProtocol';
 
 type EventName = 'accountsChanged' | 'chainChanged' | 'connect' | 'disconnect' | 'message';
@@ -316,7 +320,19 @@ export class ParentBridgeProvider {
     });
   }
 
-  private resolvePending(message: Extract<ParentMessage, { correlationId: string }>): void {
+  /**
+   * Resolves wallet-shape responses (`{ ok, data | error }`). Job results
+   * use a different envelope (`{ status, data?, chunk?, error? }`) and are
+   * routed through a separate listener registered by `useCallJob` / the SDK
+   * — the provider doesn't double-handle them.
+   */
+  private resolvePending(
+    message:
+      | ReadAccountResult
+      | SwitchChainResult
+      | SignMessageResult
+      | SignTransactionResult,
+  ): void {
     const entry = this.pending.get(message.correlationId);
     if (!entry) return;
     this.pending.delete(message.correlationId);
