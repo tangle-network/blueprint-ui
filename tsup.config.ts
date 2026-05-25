@@ -5,6 +5,7 @@ export default defineConfig({
     index: 'src/index.ts',
     components: 'src/components.ts',
     preset: 'src/preset.ts',
+    'wallet/index': 'src/wallet/index.ts',
   },
   format: ['esm'],
   dts: true,
