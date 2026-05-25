@@ -73,7 +73,7 @@ const ZERO_ADDRESS_LOWER = '0x0000000000000000000000000000000000000000';
  * components can pass a derived value (e.g. `address ?? ZERO`) before the
  * wallet has connected.
  */
-function assertRequester(requester: Address, hookName: string, enabled: boolean): void {
+export function assertRequester(requester: Address, hookName: string, enabled: boolean): void {
   if (!enabled) return;
   if (!requester || requester.toLowerCase() === ZERO_ADDRESS_LOWER) {
     throw new Error(
