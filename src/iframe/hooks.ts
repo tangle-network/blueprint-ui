@@ -1,5 +1,12 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import type { Address, Hex } from 'viem';
+import {
+  createPublicClient,
+  http,
+  type Address,
+  type Chain,
+  type Hex,
+  type PublicClient,
+} from 'viem';
 
 import { useTangleIframeContext } from './TangleIframeProvider';
 import type {
@@ -7,7 +14,11 @@ import type {
   ServiceSnapshot,
   WalletSnapshot,
 } from './tangleIframeClient';
-import type { JobInputs } from '../wallet/parentBridgeProtocol';
+import type {
+  ChainContext,
+  JobInputs,
+  SignTypedDataRequest,
+} from '../wallet/parentBridgeProtocol';
 
 /**
  * Read-only view of the connected wallet, plus the operations the iframe
@@ -23,6 +34,12 @@ export function useTangleWallet(): WalletSnapshot & {
     to: Address;
     data: Hex;
     value?: bigint;
+  }) => Promise<Hex>;
+  signTypedData: (args: {
+    domain: SignTypedDataRequest['domain'];
+    types: SignTypedDataRequest['types'];
+    primaryType: string;
+    message: Readonly<Record<string, unknown>>;
   }) => Promise<Hex>;
   switchChain: (chainId: number) => Promise<number>;
 } {
@@ -41,6 +58,18 @@ export function useTangleWallet(): WalletSnapshot & {
     },
     [client],
   );
+  const signTypedData = useCallback(
+    (args: {
+      domain: SignTypedDataRequest['domain'];
+      types: SignTypedDataRequest['types'];
+      primaryType: string;
+      message: Readonly<Record<string, unknown>>;
+    }) => {
+      if (!client) throw new Error('Wallet not available in dev mode.');
+      return client.signTypedData(args);
+    },
+    [client],
+  );
   const switchChain = useCallback(
     (chainId: number) => {
       if (!client) throw new Error('Wallet not available in dev mode.');
@@ -48,7 +77,70 @@ export function useTangleWallet(): WalletSnapshot & {
     },
     [client],
   );
-  return { ...wallet, signMessage, sendTransaction, switchChain };
+  return {
+    ...wallet,
+    signMessage,
+    sendTransaction,
+    signTypedData,
+    switchChain,
+  };
+}
+
+/**
+ * Chain configuration broadcast by the parent: chain id, name, RPC URL,
+ * block explorer, native currency. Returns `null` until the parent has
+ * sent its first `serviceContext` broadcast (or in dev mode without a
+ * seeded harness).
+ *
+ * Use this when you want to display chain-aware info (block explorer
+ * links, native currency labels) or when you want to build your own viem
+ * client with the parent's RPC URL. For a pre-built read-only client,
+ * see `useTanglePublicClient()`.
+ */
+export function useChainContext(): ChainContext | null {
+  return useTangleIframeContext().service.chain;
+}
+
+/**
+ * Read-only viem `PublicClient` pinned to the chain the parent dapp is
+ * connected to. Useful for `readContract`, `getBalance`, `multicall`, etc.
+ *
+ * Returns `null` until the parent broadcasts a chain context. Iframes that
+ * need to read from chains *other* than the active one should bring their
+ * own client — this hook is a convenience for the common case, not a
+ * constraint. Multi-chain dashboards just create additional clients
+ * directly via `createPublicClient`.
+ *
+ * Memoized per chain id + RPC URL, so consumers get a stable identity
+ * across re-renders.
+ */
+export function useTanglePublicClient(): PublicClient | null {
+  const chain = useChainContext();
+  return useMemo(() => {
+    if (!chain) return null;
+    const chainConfig: Chain = {
+      id: chain.id,
+      name: chain.name,
+      nativeCurrency:
+        chain.nativeCurrency !== undefined
+          ? { ...chain.nativeCurrency }
+          : { name: 'Ether', symbol: 'ETH', decimals: 18 },
+      rpcUrls: {
+        default: { http: [chain.rpcUrl] },
+      },
+      ...(chain.blockExplorerUrl
+        ? {
+            blockExplorers: {
+              default: { name: 'Explorer', url: chain.blockExplorerUrl },
+            },
+          }
+        : {}),
+    } as Chain;
+    return createPublicClient({
+      chain: chainConfig,
+      transport: http(chain.rpcUrl),
+    });
+  }, [chain]);
 }
 
 /**

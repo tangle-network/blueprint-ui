@@ -39,6 +39,7 @@ export type MockServiceInput = Partial<{
   operators: readonly ServiceContextOperator[];
   jobs: readonly ServiceContextJob[];
   mode: string | null;
+  chain: import('../wallet/parentBridgeProtocol').ChainContext | null;
 }>;
 
 /**
@@ -80,6 +81,16 @@ export function mockServiceContext(
         { index: 0, name: 'invoke' },
       ],
     mode: input.mode ?? null,
+    chain:
+      input.chain === undefined
+        ? {
+            id: 84532,
+            name: 'Base Sepolia',
+            rpcUrl: 'https://sepolia.base.org',
+            blockExplorerUrl: 'https://sepolia.basescan.org',
+            nativeCurrency: { name: 'Sepolia Ether', symbol: 'ETH', decimals: 18 },
+          }
+        : input.chain,
   };
 }
 
@@ -170,6 +181,9 @@ export const TangleParentHarness: FC<HarnessProps> = ({
         operators: currentService.operators,
         jobs: currentService.jobs,
         mode: currentService.mode,
+        ...(currentService.chain !== null
+          ? { chain: currentService.chain }
+          : {}),
       };
       reply(broadcastMsg);
       // Also broadcast wallet — combined into accountChanged + chainChanged.
@@ -279,6 +293,22 @@ export const TangleParentHarness: FC<HarnessProps> = ({
           });
           return;
         }
+        case 'tangle.app.signTypedData': {
+          if (typeof message.correlationId !== 'string') return;
+          // The harness signs deterministically — production parents show
+          // an approval modal first. Tests that need to assert the
+          // typed-data payload should inspect callLog (extend later if
+          // needed) or pass a custom onSignTypedData handler.
+          reply({
+            kind: 'tangle.app.signTypedDataResult',
+            correlationId: message.correlationId,
+            ok: true,
+            data: {
+              signature: ('0x' + '11'.repeat(65)) as `0x${string}`,
+            },
+          });
+          return;
+        }
         case 'tangle.app.signTransaction': {
           if (typeof message.correlationId !== 'string') return;
           reply({
@@ -350,6 +380,9 @@ export const TangleParentHarness: FC<HarnessProps> = ({
           operators: currentService.operators,
           jobs: currentService.jobs,
           mode: currentService.mode,
+          ...(currentService.chain !== null
+            ? { chain: currentService.chain }
+            : {}),
         },
         origin: HARNESS_ORIGIN,
       }),

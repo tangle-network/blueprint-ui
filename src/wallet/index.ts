@@ -54,6 +54,7 @@ export {
   type AccountChanged,
   type CallJobRequest,
   type ChainChanged,
+  type ChainContext,
   type HandshakeAck,
   type HandshakeRequest,
   type IframeRequest,
@@ -70,6 +71,8 @@ export {
   type SignMessageResult,
   type SignTransactionRequest,
   type SignTransactionResult,
+  type SignTypedDataRequest,
+  type SignTypedDataResult,
   type SwitchChainRequest,
   type SwitchChainResult,
 } from './parentBridgeProtocol';
