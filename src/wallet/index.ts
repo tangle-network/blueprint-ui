@@ -8,32 +8,38 @@
  * postMessage protocol, so the iframe inherits the parent's wallet without
  * its own picker.
  *
- * Usage in an iframe app's wagmi config:
+ * Build a blueprint app ONCE and ship it both standalone and embedded — the
+ * recommended entry point is `tangleBlueprintConnectors`, which picks the
+ * right connectors at runtime:
  *
- *   import {
- *     detectTangleCloudParentOrigin,
- *     parentBridgeConnector,
- *   } from '@tangle-network/blueprint-ui/wallet';
+ *   import { tangleBlueprintConnectors } from '@tangle-network/blueprint-ui/wallet';
  *
- *   const parent = detectTangleCloudParentOrigin();
- *   const config = createConfig(
- *     parent !== null
- *       ? { ...getDefaultConfig({...}), connectors: [
- *           parentBridgeConnector({ parentOrigin: parent, appId: 'my-app' }),
- *         ] }
- *       : getDefaultConfig({...}),
- *   );
+ *   createConfig({
+ *     chains, transports,
+ *     connectors: tangleBlueprintConnectors({
+ *       appId: 'my-app',
+ *       standalone: [injected(), walletConnect({ projectId })],
+ *     }),
+ *   });
  *
- * The bridge is intentionally the ONLY connector when running inside the
- * dapp — surfacing injected / WalletConnect / Coinbase inside a sandboxed
- * iframe doesn't work (no popup, no extension injection) and would just
- * confuse operators.
+ * Embedded in Tangle Cloud → the bridge connector inherits/drives the parent
+ * wallet. Standalone → the app's own connectors. The bridge is intentionally
+ * the ONLY connector when embedded — surfacing injected / WalletConnect inside
+ * a sandboxed iframe doesn't work (no popup, no extension injection).
+ *
+ * `detectTangleCloudParentOrigin` + `parentBridgeConnector` stay exported for
+ * apps that hand-roll the selection.
  */
 
 export {
   detectTangleCloudParentOrigin,
   TANGLE_CLOUD_ORIGINS_DEFAULT,
 } from './detectParentOrigin';
+
+export {
+  tangleBlueprintConnectors,
+  type TangleBlueprintConnectorsOptions,
+} from './tangleConnectors';
 
 export {
   parentBridgeConnector,
