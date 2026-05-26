@@ -77,6 +77,43 @@ describe('TangleIframeClient', () => {
     ]);
   });
 
+  it('connect() asks the parent to connect and resolves with the address', async () => {
+    client.install();
+    fake.sendFromParent({
+      kind: 'tangle.app.handshakeAck',
+      appId: 'test-app',
+      protocolVersion: '1',
+    });
+    const promise = client.connect();
+    await vi.waitFor(() =>
+      expect(
+        fake.captured.some(
+          (m) => (m as { kind?: string }).kind === 'tangle.app.requestConnect',
+        ),
+      ).toBe(true),
+    );
+    const req = fake.captured.find(
+      (m) => (m as { kind?: string }).kind === 'tangle.app.requestConnect',
+    ) as { correlationId: string };
+    fake.sendFromParent({
+      kind: 'tangle.app.connectResult',
+      correlationId: req.correlationId,
+      ok: true,
+      data: {
+        account: '0xd8da6bf26964af9d7eed9e03e53415d37aa96045',
+        chainId: 84532,
+      },
+    });
+    await expect(promise).resolves.toBe(
+      '0xd8da6bf26964af9d7eed9e03e53415d37aa96045',
+    );
+    expect(client.getWallet()).toMatchObject({
+      address: '0xd8da6bf26964af9d7eed9e03e53415d37aa96045',
+      chainId: 84532,
+      isConnected: true,
+    });
+  });
+
   it('emits a service snapshot when the parent broadcasts serviceContext', () => {
     client.install();
     const seen: unknown[] = [];

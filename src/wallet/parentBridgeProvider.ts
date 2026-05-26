@@ -14,6 +14,7 @@ import {
   makeCorrelationId,
   NO_WALLET_ADDRESS,
   TANGLE_IFRAME_PROTOCOL_VERSION,
+  type ConnectResult,
   type ParentMessage,
   type ReadAccountResult,
   type SignMessageResult,
@@ -51,6 +52,9 @@ export type ParentBridgeOptions = {
 };
 
 const DEFAULT_REQUEST_TIMEOUT_MS = 60_000;
+// Connecting is gated on the user interacting with the parent's modal — allow
+// a generous window rather than the standard per-request timeout.
+const CONNECT_REQUEST_TIMEOUT_MS = 300_000;
 
 /**
  * Detect iframe execution context. When this returns `false` the bridge
@@ -121,10 +125,18 @@ export class ParentBridgeProvider {
         await this.ensureBootstrapped();
         return this.cachedChainId !== null ? `0x${this.cachedChainId.toString(16)}` : '0x0';
       }
-      case 'eth_accounts':
-      case 'eth_requestAccounts': {
+      case 'eth_accounts': {
+        // Passive read — never opens a modal.
         await this.ensureBootstrapped();
         return this.cachedAccount !== null ? [this.cachedAccount] : [];
+      }
+      case 'eth_requestAccounts': {
+        // Active connect (the wallet "Connect" button). If the parent has no
+        // wallet yet, delegate to it to open its connect modal and wait.
+        await this.ensureBootstrapped();
+        if (this.cachedAccount !== null) return [this.cachedAccount];
+        const account = await this.requestConnect();
+        return account !== null ? [account] : [];
       }
       case 'personal_sign': {
         const [message, _signer] = params as [string, Address];
@@ -213,6 +225,7 @@ export class ParentBridgeProvider {
         });
         return;
       case 'tangle.app.readAccountResult':
+      case 'tangle.app.connectResult':
         this.resolvePending(message);
         if (message.ok) {
           this.updateAccount(
@@ -245,6 +258,21 @@ export class ParentBridgeProvider {
       kind: 'tangle.app.readAccount',
       expectedKind: 'tangle.app.readAccountResult',
     }) as Promise<{ account: Address; chainId: number }>;
+  }
+
+  /**
+   * Ask the parent to connect a wallet (opening its modal if needed) and wait
+   * for the result. Long timeout — the user is interacting with the modal.
+   */
+  private requestConnect(): Promise<Address | null> {
+    return this.dispatch({
+      kind: 'tangle.app.requestConnect',
+      expectedKind: 'tangle.app.connectResult',
+      timeoutMs: CONNECT_REQUEST_TIMEOUT_MS,
+    }).then((data) => {
+      const { account } = data as { account: Address; chainId: number };
+      return account === NO_WALLET_ADDRESS ? null : account;
+    });
   }
 
   private requestSignMessage(message: string): Promise<Hex> {
@@ -289,13 +317,19 @@ export class ParentBridgeProvider {
   }
 
   private async dispatch(req: {
-    kind: 'tangle.app.readAccount' | 'tangle.app.switchChain' | 'tangle.app.signMessage' | 'tangle.app.signTransaction';
+    kind:
+      | 'tangle.app.readAccount'
+      | 'tangle.app.switchChain'
+      | 'tangle.app.signMessage'
+      | 'tangle.app.signTransaction'
+      | 'tangle.app.requestConnect';
     expectedKind: ParentMessage['kind'];
     payload?: Record<string, unknown>;
+    timeoutMs?: number;
   }): Promise<unknown> {
     await this.ensureBootstrapped();
     const correlationId = makeCorrelationId(req.kind);
-    const timeout = this.options.requestTimeoutMs ?? DEFAULT_REQUEST_TIMEOUT_MS;
+    const timeout = req.timeoutMs ?? this.options.requestTimeoutMs ?? DEFAULT_REQUEST_TIMEOUT_MS;
     return new Promise<unknown>((resolve, reject) => {
       const timer = window.setTimeout(() => {
         this.pending.delete(correlationId);
@@ -329,6 +363,7 @@ export class ParentBridgeProvider {
   private resolvePending(
     message:
       | ReadAccountResult
+      | ConnectResult
       | SwitchChainResult
       | SignMessageResult
       | SignTransactionResult,
