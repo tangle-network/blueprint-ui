@@ -29,6 +29,7 @@ import type {
  * dapp's wagmi config + ConnectKit modal.
  */
 export function useTangleWallet(): WalletSnapshot & {
+  connect: () => Promise<Address | null>;
   signMessage: (message: string) => Promise<Hex>;
   sendTransaction: (tx: {
     to: Address;
@@ -44,6 +45,10 @@ export function useTangleWallet(): WalletSnapshot & {
   switchChain: (chainId: number) => Promise<number>;
 } {
   const { client, wallet } = useTangleIframeContext();
+  const connect = useCallback(() => {
+    if (!client) throw new Error('Wallet not available in dev mode.');
+    return client.connect();
+  }, [client]);
   const signMessage = useCallback(
     (message: string) => {
       if (!client) throw new Error('Wallet not available in dev mode.');
@@ -79,6 +84,7 @@ export function useTangleWallet(): WalletSnapshot & {
   );
   return {
     ...wallet,
+    connect,
     signMessage,
     sendTransaction,
     signTypedData,

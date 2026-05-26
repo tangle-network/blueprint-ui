@@ -20,6 +20,15 @@ export type ReadAccountRequest = {
   correlationId: string;
 };
 
+// Ask the parent to ensure a wallet is connected — opening its connect modal
+// if none is. A sandboxed iframe can't reach a wallet extension itself, so
+// this is the *only* way an iframe can initiate a connection: it delegates to
+// the parent, which owns the wallet. Resolves once the parent has an account.
+export type RequestConnectRequest = {
+  kind: 'tangle.app.requestConnect';
+  correlationId: string;
+};
+
 export type SwitchChainRequest = {
   kind: 'tangle.app.switchChain';
   correlationId: string;
@@ -88,6 +97,10 @@ export type ResultEnvelope<T> = { correlationId: string } & (
 
 export type ReadAccountResult = {
   kind: 'tangle.app.readAccountResult';
+} & ResultEnvelope<{ account: Address; chainId: number }>;
+
+export type ConnectResult = {
+  kind: 'tangle.app.connectResult';
 } & ResultEnvelope<{ account: Address; chainId: number }>;
 
 export type SwitchChainResult = {
@@ -221,6 +234,7 @@ export type JobResultEvent = {
 export type ParentMessage =
   | HandshakeAck
   | ReadAccountResult
+  | ConnectResult
   | SwitchChainResult
   | SignMessageResult
   | SignTransactionResult
@@ -233,6 +247,7 @@ export type ParentMessage =
 export type IframeRequest =
   | HandshakeRequest
   | ReadAccountRequest
+  | RequestConnectRequest
   | SwitchChainRequest
   | SignMessageRequest
   | SignTransactionRequest

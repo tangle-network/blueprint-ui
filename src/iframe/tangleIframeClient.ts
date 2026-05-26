@@ -85,6 +85,9 @@ export type TangleIframeClientOptions = {
 };
 
 const DEFAULT_REQUEST_TIMEOUT_MS = 60_000;
+// Connecting is gated on the user picking + approving a wallet in the parent's
+// modal — give it a generous window rather than the standard request timeout.
+const CONNECT_REQUEST_TIMEOUT_MS = 300_000;
 const HANDSHAKE_RETRY_MS = 250;
 const HANDSHAKE_RETRY_BUDGET_MS = 10_000;
 const NULL_WALLET: WalletSnapshot = {
@@ -183,6 +186,28 @@ export class TangleIframeClient {
   }
 
   // ── Wallet operations ───────────────────────────────────────────────────
+
+  /**
+   * Ask the parent dapp to connect a wallet — opening its connect modal if
+   * none is connected. The iframe is sandboxed and cannot reach a wallet
+   * itself, so connection is always delegated to the parent. Resolves with the
+   * connected address (or `null` if the user dismissed without connecting).
+   *
+   * Uses a long timeout (the user is interacting with a modal). Already-
+   * connected parents resolve immediately.
+   */
+  async connect(): Promise<Address | null> {
+    await this.ensureBootstrapped();
+    const data = await this.dispatchWallet(
+      'tangle.app.requestConnect',
+      {},
+      CONNECT_REQUEST_TIMEOUT_MS,
+    );
+    const { account, chainId } = data as { account: Address; chainId: number };
+    const address = account === NO_WALLET_ADDRESS ? null : account;
+    this.updateWallet({ address, chainId, isConnected: address !== null });
+    return address;
+  }
 
   async signMessage(message: string): Promise<Hex> {
     await this.ensureBootstrapped();
@@ -371,19 +396,21 @@ export class TangleIframeClient {
       | 'tangle.app.signMessage'
       | 'tangle.app.signTransaction'
       | 'tangle.app.signTypedData'
-      | 'tangle.app.switchChain',
+      | 'tangle.app.switchChain'
+      | 'tangle.app.requestConnect',
     payload: Record<string, unknown>,
+    timeoutMs?: number,
   ): Promise<unknown> {
     return new Promise((resolve, reject) => {
       const correlationId = makeCorrelationId(kind);
-      const timeout =
-        this.options.requestTimeoutMs ?? DEFAULT_REQUEST_TIMEOUT_MS;
+      const timeout = timeoutMs ?? this.options.requestTimeoutMs ?? DEFAULT_REQUEST_TIMEOUT_MS;
       const expectedKind = (
         {
           'tangle.app.signMessage': 'tangle.app.signMessageResult',
           'tangle.app.signTransaction': 'tangle.app.signTransactionResult',
           'tangle.app.signTypedData': 'tangle.app.signTypedDataResult',
           'tangle.app.switchChain': 'tangle.app.switchChainResult',
+          'tangle.app.requestConnect': 'tangle.app.connectResult',
         } as const
       )[kind];
       const timer = setTimeout(() => {

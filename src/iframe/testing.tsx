@@ -236,6 +236,25 @@ export const TangleParentHarness: FC<HarnessProps> = ({
           });
           return;
         }
+        case 'tangle.app.requestConnect': {
+          // The harness "connects" immediately to the mocked wallet — a real
+          // parent would open its connect modal and resolve once the user
+          // picks a wallet. Tests that need the disconnected path pass a
+          // wallet with a null address.
+          if (typeof message.correlationId !== 'string') return;
+          reply({
+            kind: 'tangle.app.connectResult',
+            correlationId: message.correlationId,
+            ok: true,
+            data: {
+              account:
+                currentWallet.address ??
+                ('0x0000000000000000000000000000000000000000' as Address),
+              chainId: currentWallet.chainId ?? 0,
+            },
+          });
+          return;
+        }
         case 'tangle.app.callJob': {
           if (typeof message.correlationId !== 'string') return;
           const request = message as unknown as CallJobRequest;
