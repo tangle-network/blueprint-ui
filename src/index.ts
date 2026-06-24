@@ -127,3 +127,7 @@ export { useWalletEthBalance } from './hooks/useWalletEthBalance';
 // ── Registration ──
 export { useRegistrationCommand } from './hooks/useRegistrationCommand';
 export type { RegistrationCommandOptions, RegistrationCommandResult, RegistrationMode } from './hooks/useRegistrationCommand';
+
+// ── Service Request ──
+export { useServiceRequest } from './hooks/useServiceRequest';
+export type { ServiceRequestParams } from './hooks/useServiceRequest';
