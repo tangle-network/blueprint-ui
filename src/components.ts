@@ -58,8 +58,5 @@ export { BlueprintHostHero, BlueprintHostPanel } from './host';
 
 // ── Blueprint flows ──
 export { OperatorOnboardingGuide } from './components/OperatorOnboardingGuide';
-export type { OperatorOnboardingGuideProps } from './components/OperatorOnboardingGuide';
 
 // ── Blueprint flows ──
-export { OperatorOnboardingGuide } from './components/OperatorOnboardingGuide';
-export type { OperatorOnboardingGuideProps } from './components/OperatorOnboardingGuide';
