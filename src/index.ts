@@ -123,3 +123,11 @@ export type { UseSidecarAuthOptions, SidecarAuth } from './hooks/useSidecarAuth'
 export { useSidecarAuth } from './hooks/useSidecarAuth';
 export { useWagmiSidecarAuth } from './hooks/useWagmiSidecarAuth';
 export { useWalletEthBalance } from './hooks/useWalletEthBalance';
+
+// ── Registration ──
+export { useRegistrationCommand } from './hooks/useRegistrationCommand';
+export type { RegistrationCommandOptions, RegistrationCommandResult, RegistrationMode } from './hooks/useRegistrationCommand';
+
+// ── Service Request ──
+export { useServiceRequest } from './hooks/useServiceRequest';
+export type { ServiceRequestParams } from './hooks/useServiceRequest';

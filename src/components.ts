@@ -55,3 +55,7 @@ export { JobExecutionDialog } from './components/forms/JobExecutionDialog';
 
 // ── Blueprint Host ──
 export { BlueprintHostHero, BlueprintHostPanel } from './host';
+
+// ── Blueprint flows ──
+export { OperatorOnboardingGuide } from './components/OperatorOnboardingGuide';
+export type { OperatorOnboardingGuideProps } from './components/OperatorOnboardingGuide';
