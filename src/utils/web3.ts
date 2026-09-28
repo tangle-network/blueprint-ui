@@ -1,4 +1,4 @@
-import type { Chain } from 'viem';
+import type { Chain, HttpTransport } from 'viem';
 import { http } from 'wagmi';
 import { mainnet, rpcUrl, tangleLocal, tangleMainnet, tangleTestnet } from '../contracts/chains';
 
@@ -8,7 +8,9 @@ export function getTangleWalletChains(localChain: Chain = tangleLocal): readonly
 
 export const tangleWalletChains: readonly [Chain, ...Chain[]] = getTangleWalletChains();
 
-export function createTangleTransports(localChain: Pick<Chain, 'id' | 'rpcUrls'> = tangleLocal) {
+export function createTangleTransports(
+  localChain: Pick<Chain, 'id' | 'rpcUrls'> = tangleLocal,
+): Record<number, HttpTransport> {
   const localRpcUrl = localChain.rpcUrls.default.http[0] ?? rpcUrl;
 
   return {
