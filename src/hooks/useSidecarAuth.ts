@@ -84,7 +84,7 @@ export function useSidecarAuth({ resourceId, apiUrl, signMessage }: UseSidecarAu
   const [expiresAt, setExpiresAt] = useState<number>(cached?.expiresAt ?? 0);
   const [isAuthenticating, setIsAuthenticating] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const refreshTimerRef = useRef<ReturnType<typeof setTimeout>>();
+  const refreshTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   const clearCachedToken = useCallback(() => {
     setToken(null);

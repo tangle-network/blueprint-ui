@@ -1,6 +1,6 @@
 import { createPublicClient, http } from 'viem';
 import type { PublicClient } from 'viem';
-import { atom } from 'nanostores';
+import { atom, type PreinitializedWritableAtom } from 'nanostores';
 import { getNetworks, tangleLocal, type CoreAddresses } from './chains';
 import { persistedAtom } from '../stores/persistedAtom';
 import { getEnvVar } from '../utils/env';
@@ -65,7 +65,7 @@ function getOrCreateClient(chainId: number): PublicClient {
   return client;
 }
 
-export const publicClientStore = atom<PublicClient>(getOrCreateClient(sanitizeSelectedChainId()));
+export const publicClientStore: PreinitializedWritableAtom<PublicClient> = atom<PublicClient>(getOrCreateClient(sanitizeSelectedChainId()));
 
 selectedChainIdStore.subscribe((chainId: number) => {
   const normalized = normalizeSelectedChainId(chainId);
@@ -81,7 +81,7 @@ export function getPublicClient(): PublicClient {
   return publicClientStore.get();
 }
 
-export const publicClient = new Proxy({} as PublicClient, {
+export const publicClient: PublicClient = new Proxy({} as PublicClient, {
   get(_target, prop) {
     const client = getOrCreateClient(sanitizeSelectedChainId());
     const value = (client as any)[prop];
