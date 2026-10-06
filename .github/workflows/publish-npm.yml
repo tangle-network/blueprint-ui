@@ -13,16 +13,19 @@ on:
 
 permissions:
   contents: read
-  id-token: write
 
 concurrency:
   group: npm-publish-${{ github.repository }}-${{ github.ref_name }}
   cancel-in-progress: false
 
 jobs:
-  publish:
+  # Typechecks and validates on the self-hosted runner, then decides whether the
+  # registry still needs this version.
+  check:
     if: github.repository == 'tangle-network/blueprint-ui'
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, ci-public]
+    outputs:
+      publish: ${{ steps.validate.outputs.publish }}
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -68,11 +71,40 @@ jobs:
 
           if npm view "${PKG_NAME}@${PKG_VERSION}" version --registry https://registry.npmjs.org >/dev/null 2>&1; then
             echo "${PKG_NAME}@${PKG_VERSION} is already published."
-            exit 1
+            echo "publish=false" >> "${GITHUB_OUTPUT}"
+            exit 0
           fi
 
           echo "version=${PKG_VERSION}" >> "${GITHUB_OUTPUT}"
+          echo "publish=true" >> "${GITHUB_OUTPUT}"
 
+  # npm provenance and trusted publishing need a GitHub-hosted runner, so only the
+  # publish runs there, and only when the version is new.
+  publish:
+    needs: check
+    if: needs.check.outputs.publish == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+
+      - name: Setup Node
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: '22'
+          registry-url: https://registry.npmjs.org
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # prepack builds dist before the tarball is created.
       - name: Publish package
         run: npm publish --provenance --access public
         env:
