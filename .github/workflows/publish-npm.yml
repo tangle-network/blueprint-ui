@@ -22,7 +22,7 @@ concurrency:
 jobs:
   publish-check:
     if: github.repository == 'tangle-network/blueprint-ui'
-    runs-on: [self-hosted, Linux, X64, ci-public]
+    runs-on: ubuntu-latest
     permissions:
       contents: read
     outputs:
